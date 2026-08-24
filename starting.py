@@ -43,23 +43,30 @@ def combat_system():
 
     #3. Enemy selection and setup
     enemies = {
-        "fire_fiend": {"health": 80, "damage": 10, "element": "fire", "weakness": "water"},
-        "water_zombie": {"health": 70, "damage": 12, "element": "water", "weakness": "nature"},
-        "earth_golem": {"health": 100, "damage": 15, "element": "earth", "weakness": "fire"},
-        "vengeful_spirit": {"health": 90, "damage": 14, "element": "rage", "weakness": "clear mind"},
-        "Mind_flayer": {"health": 60, "damage": 20, "element": "clear mind", "weakness": "rage"}
+        "fire_fiend": {"health": 30, "damage": 10, "element": "fire", "weakness": "water"},
+        "water_zombie": {"health": 20, "damage": 12, "element": "water", "weakness": "nature"},
+        "earth_golem": {"health": 50, "damage": 15, "element": "earth", "weakness": "fire"},
+        "vengeful_spirit": {"health": 30, "damage": 14, "element": "rage", "weakness": "clear mind"},
+        "Mind_flayer": {"health": 40, "damage": 20, "element": "clear mind", "weakness": "rage"}
     }
     print("\n--- Select the Enemies to fight against ---")
     enemy_count = 0
     enemy_amount = int(input("How many enemies do you want to fight against?: "))
     ememies = []
-    while enemy_count < enemy_amount:
-        enemy = input(f"Enter the name of enemy {enemy_count + 1}: ")
-        if enemy:
-            ememies.append(enemy)
-            enemy_count += 1
+    while True:
+        if enemy_count < enemy_amount:
+            print(enemy_count)
+            enemy = input(f"Enter the name of enemy {enemy_count + 1}: ")
+            if enemy:
+                ememies.append(enemy)
+                enemy_count += 1
+            else:
+                print("Invalid input. Please enter a valid enemy name.")
         else:
-            print("Invalid input. Please enter a valid enemy name.")
+            print("im in the break")
+            print(enemy_count)
+            break
+
     #4. Combat loop
     active_combat = True
     while active_combat:
@@ -70,7 +77,7 @@ def combat_system():
         print("Enemies:")
         for enemy in active_enemies:
             print(f"{enemy.capitalize()} - Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']}")
-        action = input("\nChoose your action (attack, defend, use item, flee): ").lower()
+        action = input("\nChoose your action defend, (attack, use item, flee): ").lower()
         if action == "attack":
             target = input("Choose an enemy to attack: ").lower()
             if target in active_enemies:
@@ -78,8 +85,8 @@ def combat_system():
                 base_damage = Gods[ally_god]["damage"]
                 
                 if attack_type == "special":
-                    if Nyx_mp >= special_cost:
-                        Nyx_mp -= special_cost
+                    if Nyx_Mp >= special_cost:
+                        Nyx_Mp -= special_cost
                         print(f"\nNyx channels {Gods[ally_god]['element']} magic! (-{special_cost} MP)")
                         
                         # Check for weakness multiplier
@@ -91,21 +98,34 @@ def combat_system():
                 
                 enemies[target]["health"] -= base_damage
                 print(f"You struck {target.capitalize()} with {Gods[ally_god]['weapon']} for {base_damage} damage!")
-                print(f"Remaining MP: {Nyx_mp}")
+                print(f"Remaining MP: {Nyx_Mp}")
                 
                 if enemies[target]["health"] <= 0:
                     print(f"{target.capitalize()} has been defeated!")
+                    del enemies[target]
+                if not enemies:
+                    print("\nAll enemies have been defeated! You are victorious!")
+                    active_combat = False
             else:
                 print("Invalid target. You missed your turn!")
-        if action == "defend":
+        elif action == "defend":
             print("\nYou brace yourself for the next attack.")
-        if action == "use item":
+        elif action == "use item":
             print("\nYou used a healing potion and restored 20 health!")
             Nyx_health += 20
             if Nyx_health > 100:
                 Nyx_health = 100
-        if action == "flee":
+        elif action == "flee":
             print("\nYou have fled the battle!")
             active_combat = False
-
+        #5. Enemy attack phase
+        for enemy in active_enemies:
+            if enemies[enemy]["health"] > 0:
+                print(f"\n{enemy.capitalize()} attacks Nyx!")
+                Nyx_health -= enemies[enemy]["damage"]
+                print(f"Nyx takes {enemies[enemy]['damage']} damage! Remaining Health: {Nyx_health}")
+                if Nyx_health <= 0:
+                    print("\nNyx has been defeated! Game Over.")
+                    active_combat = False
+                    break
 combat_system()
