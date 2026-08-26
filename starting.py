@@ -1,47 +1,138 @@
 import time
-def combat_system():
-    #1. defining the gods and their attributes and weapons
-    Gods ={
-        "Apolo":{"weapon":"solar bow",
-                    "element":"fire",
-                    "damage": 15,
-                    "weakness": "water"},
-        "Ares":{"weapon":"spear",
-                    "element":"rage",
-                    "damage": 20,
-                    "weakness": "clear mind"},
-        "Athena":{"weapon":"sword",
-                    "element":"clear mind",
-                    "damage": 10,
-                    "weakness": "rage"},
-        "Poseidon":{"weapon":"trident",
-                    "element":"water",
-                    "damage": 12,
-                    "weakness": "fire"},
-        "Artemis":{"weapon":"bow", 
-                    "element":"nature",
-                    "damage": 14,
-                    "weakness": "earth"},
+items = {
+    "health_potion": {"effect": "heal", "value": 20},
+    "mana_potion": {"effect": "restore_mp", "value": 15},
+    "strength_elixir": {"effect": "buff", "value": 5},
+}
+Nyx = {
+        "health": 100,
+        "mp": 50,
+        "special_cost": 10,
+        "ally_god": "",
+        "inventory": [],
+        "Max_capacity": 5
     }
-    #2. to choose the god you will fight with
+Gods ={
+"Apolo":{"weapon":"solar bow",
+            "element":"fire",
+            "damage": 15,
+            "weakness": "water"},
+"Ares":{"weapon":"spear",
+            "element":"rage",
+            "damage": 20,
+            "weakness": "clear mind"},
+"Athena":{"weapon":"sword",
+            "element":"clear mind",
+            "damage": 10,
+            "weakness": "rage"},
+"Poseidon":{"weapon":"trident",
+            "element":"water",
+            "damage": 12,
+            "weakness": "fire"},
+"Artemis":{"weapon":"bow", 
+            "element":"nature",
+            "damage": 14,
+            "weakness": "earth"},        
+    }
+def start_game():
     print("\n--- Select your God to ally you in battle ---")
     ally_god = ""
     while ally_god not in Gods:
         ally_god = input("Choose your God (Apolo, Ares, Athena, Poseidon, Artemis): ").title()
         if ally_god not in Gods:
             print("Invalid choice. Please select a valid God.")
-    Nyx = Gods[ally_god]
     print(f"\nYou have chosen {ally_god.capitalize()} as your ally!")
-    Nyx_health = 100
-    Nyx_Mp = 50
-    special_cost = 10
+    Nyx["ally_god"] = ally_god
+    Nyx_health = Nyx["health"]
+    Nyx_Mp = Nyx["mp"]
+    special_cost = Nyx["special_cost"]
 
     print(f"\nAs {ally_god.capitalize()} power starts to flow through Nyx, The weapon of {ally_god.capitalize()} appears in Nyx's hand and the element of {Gods[ally_god]['element']} is unleashed within Nyx's body, granting her the power of {Gods[ally_god]['element']} and the weapon of {Gods[ally_god]['weapon']}.")
     time.sleep(2)
 
+def crafting_system():
+    print("\n--- Crafting System ---")
+    print("Available items to craft:")
+    for item in items:
+        print(f"- {item.replace('_', ' ').title()}")
+    choice = input("Enter the name of the item you want to craft (or type 'cancel' to go back): ").lower()
+    if choice == 'cancel':
+        return
+    if choice in items:
+        Add_item_to_inventory(Nyx["inventory"], choice)
+    else:
+        print("Invalid item. Please select a valid item to craft.")
 
 
-    #3. Enemy selection and setup
+def Add_item_to_inventory(inventory, item):
+        if len(inventory) >= Nyx["Max_capacity"]:
+            print("Inventory is full! Cannot add more items.")
+            return
+        inventory.append(item)
+        print(f"{item} has been added to your inventory.")
+        return inventory
+
+def use_item(inventory):
+    if not inventory:
+        print("Your inventory is empty!")
+        return
+    print("Inventory:")
+    for idx, item in enumerate(inventory, 1):
+        print(f"{idx}. {item}")
+    choice = input("Select an item to use (or type 'cancel' to go back): ")
+    if choice.lower() == 'cancel':
+        return
+    try:
+        choice_idx = int(choice) - 1
+        if 0 <= choice_idx < len(inventory):
+            item = inventory[choice_idx]
+            print(f"You used {item}!")
+            if item in items:
+                effect = items[item]["effect"]
+                value = items[item]["value"]
+                if effect == "heal":
+                    Nyx["health"] += value
+                    print(f"Nyx healed for {value} health! Current Health: {Nyx['health']}")
+                elif effect == "restore_mp":
+                    Nyx["mp"] += value
+                    print(f"Nyx restored {value} MP! Current MP: {Nyx['mp']}")
+                elif effect == "buff":
+                    Gods[Nyx["ally_god"]]["damage"] += value
+                    print(f"Nyx's attack power increased by {value}! Current Damage: {Gods[Nyx['ally_god']]['damage']}")
+            inventory.pop(choice_idx)
+        else:
+            print("Invalid selection.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+    
+def throw_item(inventory):
+    if not inventory:
+        print("Your inventory is empty!")
+        return
+    print("You throw all items in your inventory away!")
+    inventory.clear()
+
+def repeating_items(inventory):
+    if not inventory:
+        print("Your inventory is empty!")
+        return []
+    counts = {}
+    for item in inventory:
+        counts[item] = counts.get(item, 0) + 1
+    max_count = max(counts.values())
+    max_items = [item for item, count in counts.items() if count == max_count]    
+    print(f"Most repeated items: {max_items} ({max_count} times)")
+    return max_items
+
+def unique_items(inventory):
+    if not inventory:
+        print("Your inventory is empty!")
+        return []
+    unique_items = list(set(inventory))
+    print(f"Unique items in inventory: {unique_items}")
+    return unique_items
+def Enemy_Set_up():
+    #3.Enemy selection and setup 
     enemies = {
         "fire_fiend": {"health": 30, "damage": 10, "element": "fire", "weakness": "water"},
         "water_zombie": {"health": 20, "damage": 12, "element": "water", "weakness": "nature"},
@@ -65,9 +156,10 @@ def combat_system():
         else:
             print("im in the break")
             print(enemy_count)
-            break
+            break  
 
-    #4. Combat loop
+
+
     active_combat = True
     while active_combat:
         print("\n--- Combat Phase ---")
@@ -82,22 +174,22 @@ def combat_system():
             target = input("Choose an enemy to attack: ").lower()
             if target in active_enemies:
                 attack_type = input("Use Normal or Special attack? ").lower()
-                base_damage = Gods[ally_god]["damage"]
+                base_damage = Gods[Nyx["ally_god"]]["damage"]
                 
                 if attack_type == "special":
-                    if Nyx_Mp >= special_cost:
-                        Nyx_Mp -= special_cost
-                        print(f"\nNyx channels {Gods[ally_god]['element']} magic! (-{special_cost} MP)")
+                    if Nyx_Mp >= Nyx["special_cost"]:
+                        Nyx_Mp -= Nyx["special_cost"]
+                        print(f"\nNyx channels {Gods[Nyx['ally_god']]['element']} magic! (-{Nyx['special_cost']} MP)")
                         
                         # Check for weakness multiplier
-                        if enemies[target]["weakness"] == Gods[ally_god]["element"]:
+                        if enemies[target]["weakness"] == Gods[Nyx["ally_god"]]["element"]:
                             print("It's super effective!")
                             base_damage = int(base_damage * 1.5) # 1.5x damage modifier
                     else:
                         print("\nNot enough MP! Nyx performs a normal attack instead.")
                 
                 enemies[target]["health"] -= base_damage
-                print(f"You struck {target.capitalize()} with {Gods[ally_god]['weapon']} for {base_damage} damage!")
+                print(f"You struck {target.capitalize()} with {Gods[Nyx['ally_god']]['weapon']} for {base_damage} damage!")
                 print(f"Remaining MP: {Nyx_Mp}")
                 
                 if enemies[target]["health"] <= 0:
@@ -111,10 +203,17 @@ def combat_system():
         elif action == "defend":
             print("\nYou brace yourself for the next attack.")
         elif action == "use item":
-            print("\nYou used a healing potion and restored 20 health!")
-            Nyx_health += 20
-            if Nyx_health > 100:
-                Nyx_health = 100
+            print("\nYou rummage through your inventory for an item to use.")
+            use_item(Nyx["inventory"])
+        elif action == "show inventory":
+            if not Nyx["inventory"]:
+                print("Your inventory is empty!")
+            else:
+                print("Inventory:")
+                for item in Nyx["inventory"]:
+                    print(f"- {item}")
+        elif action == "throw all items":
+            throw_item(Nyx["inventory"])
         elif action == "flee":
             print("\nYou have fled the battle!")
             active_combat = False
@@ -128,4 +227,4 @@ def combat_system():
                     print("\nNyx has been defeated! Game Over.")
                     active_combat = False
                     break
-combat_system()
+
