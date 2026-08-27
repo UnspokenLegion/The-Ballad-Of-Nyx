@@ -1,9 +1,14 @@
 import time
 items = {
+    "herbs": {"effect": "heal", "value": 10},
+    "ginsing": {"effect": "restore_mp", "value": 5},
+    "fungi": {"effect": "buff", "value": 3},
+    
     "health_potion": {"effect": "heal", "value": 20},
     "mana_potion": {"effect": "restore_mp", "value": 15},
     "strength_elixir": {"effect": "buff", "value": 5},
 }
+
 Nyx = {
         "health": 100,
         "mp": 50,
@@ -34,7 +39,7 @@ Gods ={
             "damage": 14,
             "weakness": "earth"},        
     }
-def start_game():
+def select_ally():
     print("\n--- Select your God to ally you in battle ---")
     ally_god = ""
     while ally_god not in Gods:
@@ -51,17 +56,47 @@ def start_game():
     time.sleep(2)
 
 def crafting_system():
+    recipes = {
+        "health_potion": {"herbs": 2},
+        "mana_potion": {"ginsing": 2},
+        "strength_elixir": {"fungi": 2},
+        "rejuvenation_flask": {"herbs": 1, "ginsing": 1}
+    }
     print("\n--- Crafting System ---")
     print("Available items to craft:")
-    for item in items:
-        print(f"- {item.replace('_', ' ').title()}")
-    choice = input("Enter the name of the item you want to craft (or type 'cancel' to go back): ").lower()
+
+    for crafted_item, ingredients in recipes.items():
+        reqs = ", ".join([f"{count}x {ing.title()}" for ing, count in ingredients.items()])
+        print(f"- {crafted_item.replace('_', ' ').title()} (Requires: {reqs})")
+
+    print("\nYour Inventory:")
+    for item, count in Nyx["inventory"].items():
+        if count > 0:
+            print(f"{item.title()}: {count}")
+
+    choice = input("\nEnter the name of the item you want to craft (or type 'cancel' to go back): ").lower().replace(' ', '_')
     if choice == 'cancel':
+        print("Exiting crafting menu.")
         return
-    if choice in items:
-        Add_item_to_inventory(Nyx["inventory"], choice)
+    if choice in recipes:
+        can_craft = True
+        recipe = recipes[choice]
+
+        for ingredient, required_amount in recipe.items():
+            if Nyx["inventory"].get(ingredient, 0) < required_amount:
+                can_craft = False
+                print(f"\nYou don't have enough {ingredient.title()}! You need {required_amount}.")
+                break
+
+        if can_craft:
+            for ingredient, required_amount in recipe.items():
+                Nyx["inventory"][ingredient] -= required_amount
+
+            Nyx["inventory"][choice] = Nyx["inventory"].get(choice, 0) + 1
+            print(f"\nSuccess! You crafted a {choice.replace('_', ' ').title()}!")
     else:
-        print("Invalid item. Please select a valid item to craft.")
+        print("\nInvalid item. Please choose a valid recipe.")
+
 
 
 def Add_item_to_inventory(inventory, item):
