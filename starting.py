@@ -166,19 +166,20 @@ def unique_items(inventory):
     unique_items = list(set(inventory))
     print(f"Unique items in inventory: {unique_items}")
     return unique_items
-def Enemy_Set_up():
-    #3.Enemy selection and setup 
-    enemies = {
+enemies = {
         "fire_fiend": {"health": 30, "damage": 10, "element": "fire", "weakness": "water"},
         "water_zombie": {"health": 20, "damage": 12, "element": "water", "weakness": "nature"},
         "earth_golem": {"health": 50, "damage": 15, "element": "earth", "weakness": "fire"},
         "vengeful_spirit": {"health": 30, "damage": 14, "element": "rage", "weakness": "clear mind"},
         "Mind_flayer": {"health": 40, "damage": 20, "element": "clear mind", "weakness": "rage"}
     }
+ememies = []
+def Enemy_Set_up():
+    #3.Enemy selection and setup 
+    
     print("\n--- Select the Enemies to fight against ---")
     enemy_count = 0
     enemy_amount = int(input("How many enemies do you want to fight against?: "))
-    ememies = []
     while True:
         if enemy_count < enemy_amount:
             print(enemy_count)
@@ -194,7 +195,7 @@ def Enemy_Set_up():
             break  
 
 
-
+def combat_phase(Nyx_health, Nyx_Mp):
     active_combat = True
     while active_combat:
         print("\n--- Combat Phase ---")
