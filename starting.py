@@ -1,4 +1,8 @@
 import time
+
+
+
+
 items = {
     "herbs": {"effect": "heal", "value": 10},
     "ginsing": {"effect": "restore_mp", "value": 5},
@@ -39,6 +43,7 @@ Gods ={
             "damage": 14,
             "weakness": "earth"},        
     }
+
 def select_ally():
     print("\n--- Select your God to ally you in battle ---")
     ally_god = ""
