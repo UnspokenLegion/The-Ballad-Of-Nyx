@@ -32,6 +32,46 @@ hoja_completa = pygame.image.load("nyx.png").convert_alpha()
 sprite_espada = pygame.image.load("espada.png").convert_alpha()
 sprite_espada = pygame.transform.scale(sprite_espada, (32, 32))
 
+# Cargar y escalar las texturas a 40x40 píxeles
+# Usamos convert() para el fondo y convert_alpha() para que la roca y el árbol mantengan su fondo transparente
+# 1. Cargar las texturas base
+base_pasto = pygame.image.load("grass_tile.png").convert()
+base_roca = pygame.image.load("Layered Rock.png").convert_alpha()
+base_arbol = pygame.image.load("Tree.png").convert_alpha()
+
+# 2. Escalar: Pasto más pequeño (20x20) y Árbol más masivo (160x160)
+img_pasto = pygame.transform.scale(base_pasto, (20, 20)) 
+img_roca_normal = pygame.transform.scale(base_roca, (50, 50))
+img_arbol_enorme = pygame.transform.scale(base_arbol, (160, 160))
+
+# 3. Diccionario de objetos (El pasto ya no está aquí, lo manejaremos aparte)
+texturas_objetos = {
+    1: img_roca_normal,
+    2: img_arbol_enorme
+    # ¡Aquí puedes agregar 3, 4, 5... para tus nuevas texturas de rocas y árboles!
+}
+# Matriz del nivel (0=Pasto, 1=Roca, 2=Árbol)
+# 0=Pasto, 1=Roca pequeña, 2=Roca normal, 3=Roca grande, 4=Árbol gigante
+# Ahora sí, exactamente 15 filas x 20 columnas (600x800 píxeles)
+# 0 = Vacío (ya dibujamos el pasto al fondo), 1 = Roca, 2 = Árbol
+mapa_mundo = [
+    [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0] 
+]
+
 # Función mejorada con opción de "espejo" (voltear_horizontal)
 # Función corregida con la cuadrícula de 16x32
 def obtener_frame(columna, fila, voltear_horizontal=False):
@@ -186,9 +226,31 @@ while ejecutando:
             
         imagen_actual = animaciones[direccion_actual][indice_frame]
 
-    # C. DIBUJAR GRÁFICOS
-    pantalla.fill((40, 40, 50)) 
+# C. DIBUJAR GRÁFICOS
     
+    # CAPA 1: Tapizar el fondo con el pasto pequeño (saltando de 20 en 20 píxeles)
+    for y in range(0, 600, 20):
+        for x in range(0, 800, 20):
+            pantalla.blit(img_pasto, (x, y))
+            
+    # CAPA 2: Dibujar los objetos de la matriz (saltando de 40 en 40 píxeles)
+    for fila in range(len(mapa_mundo)):
+        for columna in range(len(mapa_mundo[fila])):
+            tipo_bloque = mapa_mundo[fila][columna] 
+            
+            # Si hay un objeto (diferente de 0)
+            if tipo_bloque != 0:
+                pos_x = columna * 40
+                pos_y = fila * 40
+                
+                # Ajuste de centrado para el árbol enorme
+                if tipo_bloque == 2:
+                    # Lo desplazamos más hacia arriba y la izquierda por su gran tamaño
+                    pantalla.blit(texturas_objetos[tipo_bloque], (pos_x - 60, pos_y - 120))
+                else:
+                    pantalla.blit(texturas_objetos[tipo_bloque], (pos_x, pos_y))
+    # ... (y aquí sigue tu código normal que dibuja a Nyx) ...
+
     if espada_en_suelo:
         pantalla.blit(sprite_espada, (espada_rect.x, espada_rect.y))
         
