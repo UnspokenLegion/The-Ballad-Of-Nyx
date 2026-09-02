@@ -17,26 +17,41 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             
-        # Check for keyboard presses
-        if event.type == pygame.KEYDOWN and state == "GOD_SELECTION":
-            if event.key == pygame.K_1:
-                Nyx["ally_god"] = "Apolo"
-            elif event.key == pygame.K_2:
-                Nyx["ally_god"] = "Ares"
-            elif event.key == pygame.K_3:
-                Nyx["ally_god"] = "Athena"
-            elif event.key == pygame.K_4:
-                Nyx["ally_god"] = "Poseidon"
-            elif event.key == pygame.K_5:
-                Nyx["ally_god"] = "Artemis"
-                
-            # If a valid key was pressed, apply the stats and change state!
-            if Nyx["ally_god"] != "":
-                # (You would run your stat update logic here)
-                state = "SHOW_CONFIRMATION" 
+# Check for keyboard presses
+        if event.type == pygame.KEYDOWN:
+            
+            # 1. God Selection Check
+            if state == "GOD_SELECTION":
+                if event.key == pygame.K_1:
+                    Nyx["ally_god"] = "Apolo"
+                elif event.key == pygame.K_2:
+                    Nyx["ally_god"] = "Ares"
+                elif event.key == pygame.K_3:
+                    Nyx["ally_god"] = "Athena"
+                elif event.key == pygame.K_4:
+                    Nyx["ally_god"] = "Poseidon"
+                elif event.key == pygame.K_5:
+                    Nyx["ally_god"] = "Artemis"
+
+                # If a valid key was pressed, apply the stats and change state!
+                if Nyx["ally_god"] != "":
+                    state = "SHOW_CONFIRMATION"
+
+            # 2. Confirmation Check
             elif state == "SHOW_CONFIRMATION":
                 if event.key == pygame.K_SPACE:
                     state = "MAIN_MENU"
+
+            # 3. Main Menu Check
+            elif state == "MAIN_MENU":
+                if event.key == pygame.K_1:
+                    state = "ENEMY_SETUP"
+                elif event.key == pygame.K_2:
+                    state = "CRAFTING"
+                elif event.key == pygame.K_3:
+                    state = "INVENTORY"
+                elif event.key == pygame.K_4:
+                    running = False
     # 2. DRAW THE SCREEN
     screen.fill((0, 0, 0)) # Clear the screen with black
     
@@ -74,6 +89,25 @@ while running:
             screen.blit(line2, (50, 160))
             screen.blit(line3, (50, 200))
             screen.blit(prompt, (50, 300))
+    elif state == "MAIN_MENU":
+        # 1. Draw the Menu Title
+        menu_title = font_title.render("--- Camp Nyx: Main Menu ---", True, (0, 255, 255)) # Cyan
+        screen.blit(menu_title, (50, 50))
+
+        # 2. Create the list of choices
+        hub_options = [
+            "1. Enter Combat",
+            "2. Open Crafting",
+            "3. View Inventory",
+            "4. Quit Game"
+        ]
+
+        # 3. Draw the options dynamically just like the God Menu
+        y_position = 120
+        for option in hub_options:
+            text_surface = font_option.render(option, True, (255, 255, 255))
+            screen.blit(text_surface, (50, y_position))
+            y_position += 50 
 
     # 3. UPDATE DISPLAY
     pygame.display.flip()
