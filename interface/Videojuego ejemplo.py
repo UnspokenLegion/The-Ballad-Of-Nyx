@@ -9,7 +9,7 @@ def agregar_objeto(inventario, objeto):
         print("\n¡Inventario lleno!")
         return False
     inventario.append(objeto)
-    print(f"\n¡Recogiste: {objeto}!")
+    print(f"\n¡Has encontrado: {objeto}!")
     return True
 
 def mostrar_inventario(inventario):
@@ -48,7 +48,7 @@ img_arbol_enorme = pygame.transform.scale(base_arbol, (160, 160))
 texturas_objetos = {
     1: img_roca_normal,
     2: img_arbol_enorme
-    # ¡Aquí puedes agregar 3, 4, 5... para tus nuevas texturas de rocas y árboles!
+    # ¡Aquí podemos agregar 3, 4, 5... arboles y rocas de texturas diferentes!
 }
 # Matriz del nivel (0=Pasto, 1=Roca, 2=Árbol)
 # 0=Pasto, 1=Roca pequeña, 2=Roca normal, 3=Roca grande, 4=Árbol gigante
@@ -131,6 +131,20 @@ animaciones.update({
 jugador_rect = pygame.Rect(400, 300, 40, 80)
 jugador_vel = 4
 
+# --- 4.5. Generador de Colisiones Estáticas ---
+obstaculos = [] # Aquí guardaremos todas las cajas sólidas del mapa
+
+for fila in range(len(mapa_mundo)):
+    for columna in range(len(mapa_mundo[fila])):
+        tipo_bloque = mapa_mundo[fila][columna]
+        
+        # Si hay algo diferente de 0 (o sea, una roca o un árbol)
+        if tipo_bloque != 0:
+            # Creamos un rectángulo invisible de 40x40 en esa baldosa
+            # Esto actuará como el "tronco" o la "base" sólida del objeto
+            caja_colision = pygame.Rect(columna * 40, fila * 40, 40, 40)
+            obstaculos.append(caja_colision)
+
 espada_rect = pygame.Rect(200, 200, 32, 32)
 espada_en_suelo = True 
 
@@ -174,7 +188,11 @@ while ejecutando:
     teclas = pygame.key.get_pressed()
     esta_moviendose = False
     
-    # Solo permitimos movernos si NO estamos atacando
+    # 1. Guardar la coordenada segura ANTES de intentar movernos
+    pos_segura_x = jugador_rect.x
+    pos_segura_y = jugador_rect.y
+    
+    # 2. Intentar moverse
     if not atacando:
         if teclas[pygame.K_LEFT]:
             jugador_rect.x -= jugador_vel
@@ -192,6 +210,19 @@ while ejecutando:
             jugador_rect.y += jugador_vel
             direccion_actual = "abajo"
             esta_moviendose = True
+
+# 3. EVALUADOR DE COLISIONES SÓLIDAS
+    # Creamos un sensor (Hitbox) que solo cubra la mitad inferior de Nyx (sus piernas)
+    # jugador_rect.y + 40 baja el sensor para que ignore su cabeza
+    hitbox_nyx = pygame.Rect(jugador_rect.x, jugador_rect.y + 40, 40, 40)
+    
+    # Revisamos si LAS PIERNAS de Nyx tocan los obstáculos, ya no todo su cuerpo
+    for obs in obstaculos:
+        if hitbox_nyx.colliderect(obs):
+            # Si hay choque, cancelamos el movimiento
+            jugador_rect.x = pos_segura_x
+            jugador_rect.y = pos_segura_y
+            break
 
     tiempo_actual = pygame.time.get_ticks()
     
@@ -228,38 +259,48 @@ while ejecutando:
 
 # C. DIBUJAR GRÁFICOS
     
-    # CAPA 1: Tapizar el fondo con el pasto pequeño (saltando de 20 en 20 píxeles)
+    # 1. CAPA BASE: Tapizar el fondo con el pasto pequeño
     for y in range(0, 600, 20):
         for x in range(0, 800, 20):
             pantalla.blit(img_pasto, (x, y))
             
-    # CAPA 2: Dibujar los objetos de la matriz (saltando de 40 en 40 píxeles)
+    # 2. CAPA INTERMEDIA Y SUPERIOR: Motor de Profundidad (Y-Sorting)
+    nyx_dibujada = False
+    
     for fila in range(len(mapa_mundo)):
+        # Dibujamos los objetos de esta fila horizontal
         for columna in range(len(mapa_mundo[fila])):
             tipo_bloque = mapa_mundo[fila][columna] 
             
-            # Si hay un objeto (diferente de 0)
             if tipo_bloque != 0:
                 pos_x = columna * 40
                 pos_y = fila * 40
                 
-                # Ajuste de centrado para el árbol enorme
                 if tipo_bloque == 2:
-                    # Lo desplazamos más hacia arriba y la izquierda por su gran tamaño
                     pantalla.blit(texturas_objetos[tipo_bloque], (pos_x - 60, pos_y - 120))
                 else:
                     pantalla.blit(texturas_objetos[tipo_bloque], (pos_x, pos_y))
-    # ... (y aquí sigue tu código normal que dibuja a Nyx) ...
+                    
+        # Y-Sorting: Evalúa si los pies de Nyx están en esta capa horizontal
+        if not nyx_dibujada and jugador_rect.bottom <= (fila * 40) + 40:
+            if espada_en_suelo:
+                pantalla.blit(sprite_espada, (espada_rect.x, espada_rect.y))
+                
+            if atacando and direccion_actual == "izquierda":
+                pantalla.blit(imagen_actual, (jugador_rect.x - 20, jugador_rect.y))
+            else:
+                pantalla.blit(imagen_actual, (jugador_rect.x, jugador_rect.y))
+                
+            nyx_dibujada = True
 
-    if espada_en_suelo:
-        pantalla.blit(sprite_espada, (espada_rect.x, espada_rect.y))
-        
-    # Si estamos atacando, desplazamos el dibujo 20 píxeles a la izquierda para centrar el cuerpo
-    if atacando:
-        pantalla.blit(imagen_actual, (jugador_rect.x - 20, jugador_rect.y))
-    else:
-        pantalla.blit(imagen_actual, (jugador_rect.x, jugador_rect.y))
-
+    # Seguro de dibujado por si Nyx está al borde inferior de la pantalla
+    if not nyx_dibujada:
+        if espada_en_suelo:
+            pantalla.blit(sprite_espada, (espada_rect.x, espada_rect.y))
+        if atacando and direccion_actual == "izquierda":
+            pantalla.blit(imagen_actual, (jugador_rect.x - 20, jugador_rect.y))
+        else:
+            pantalla.blit(imagen_actual, (jugador_rect.x, jugador_rect.y))
     pygame.display.flip()
     reloj.tick(60)
 
