@@ -91,7 +91,7 @@ while running:
             screen.blit(prompt, (50, 300))
     elif state == "MAIN_MENU":
         # 1. Draw the Menu Title
-        menu_title = font_title.render("--- Camp Nyx: Main Menu ---", True, (0, 255, 255)) # Cyan
+        menu_title = font_title.render("--- Camp: Main Menu ---", True, (0, 255, 255)) # Cyan
         screen.blit(menu_title, (50, 50))
 
         # 2. Create the list of choices
