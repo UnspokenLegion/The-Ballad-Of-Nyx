@@ -100,7 +100,7 @@ def crafting_system():
             Nyx["inventory"][choice] = Nyx["inventory"].get(choice, 0) + 1
             print(f"\nSuccess! You crafted a {choice.replace('_', ' ').title()}!")
     else:
-        print("\nInvalid item. Please choose a valid recipe.")
+        print("\nPlease choose a valid recipe.")
 
 
 
