@@ -19,11 +19,11 @@ En esta primera fase del proyecto, estructuramos la base de nuestro videojuego e
 ## 3. Estructura de Archivos (Guía 1)
 El proyecto cumple con la estructura modular exigida:
 
-```text
-The_Ballad_of_Nyx/
-├── main.py          # Módulo principal: Menú, selección de dios, crafteo y combate.
-├── inventario.py    # Módulo de datos: Operaciones del inventario usando listas.
-└── README.md        # Documentación general del proyecto.
+    The_Ballad_of_Nyx/
+    ├── main.py          # Módulo principal: Menú, selección de dios, crafteo y combate.
+    ├── inventario.py    # Módulo de datos: Operaciones del inventario usando listas.
+    └── README.md        # Documentación general del proyecto.
+
 ## 4. Mecánica del Inventario con Listas (Semana 3)
 La manipulación del inventario de Nyx se apoya en los métodos nativos de listas en Python:
 
@@ -103,3 +103,4 @@ Función use_item(inventory, Nyx, items, Gods):
     Capturar ErrorDeValor:
         Escribir "Invalid input. Please enter a number."
 FinFunción
+
