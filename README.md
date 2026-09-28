@@ -125,3 +125,5 @@ Función use_item(inventory, Nyx, items, Gods):
     Capturar ErrorDeValor:
         Escribir "Invalid input. Please enter a number."
 FinFunción
+
+![Diagrama de Flujo del Inventario](diagrama_flujo.png)
