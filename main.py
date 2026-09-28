@@ -1,4 +1,5 @@
 import time
+import inventario # Importamos el inventario 
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -37,7 +38,7 @@ def select_ally():
     print(f"\nYou have chosen {ally_god.capitalize()} as your ally!")
     Nyx["ally_god"] = ally_god
     
-    print(f"\nAs {ally_god.capitalize()} power starts to flow through Nyx, The weapon of {ally_god.capitalize()} appears in Nyx's hand and the element of {Gods[ally_god]['element']} is unleashed within Nyx's body.")
+    print(f"\nAs {ally_god.capitalize()} power starts to flow through Nyx, The weapon of {ally_god.capitalize()} appears in Nyx's hand and the element of {Gods[ally_god]['element']} is unleashed within Nyx's body, granting her the power of {Gods[ally_god]['element']} and the weapon of {Gods[ally_god]['weapon']}.")
     time.sleep(2)
 
 def crafting_system():
@@ -55,7 +56,7 @@ def crafting_system():
         print(f"- {crafted_item.replace('_', ' ').title()} (Requires: {reqs})")
 
     print("\nYour Inventory:")
-    # Solución aplicada: Contar elementos directamente en la lista
+    # Solución aplicada: Uso estricto de métodos de lista para evitar el error .items()[cite: 2]
     unique_inv_items = set(Nyx["inventory"])
     for item in unique_inv_items:
         count = Nyx["inventory"].count(item)
@@ -70,7 +71,7 @@ def crafting_system():
         can_craft = True
         recipe = recipes[choice]
 
-        # Solución aplicada: Validar contra el conteo de la lista
+        # Validación con método nativo .count() de listas
         for ingredient, required_amount in recipe.items():
             if Nyx["inventory"].count(ingredient) < required_amount:
                 can_craft = False
@@ -78,7 +79,7 @@ def crafting_system():
                 break
 
         if can_craft:
-            # Solución aplicada: Remover elementos usados y agregar el crafteado a la lista
+            # Eliminación e inserción usando .remove() y .append()
             for ingredient, required_amount in recipe.items():
                 for _ in range(required_amount):
                     Nyx["inventory"].remove(ingredient)
@@ -88,54 +89,6 @@ def crafting_system():
     else:
         print("\nPlease choose a valid recipe.")
 
-def Add_item_to_inventory(inventory, item):
-    if len(inventory) >= Nyx["Max_capacity"]:
-        print("Inventory is full! Cannot add more items.")
-        return
-    inventory.append(item)
-    print(f"{item} has been added to your inventory.")
-    return inventory
-
-def use_item(inventory):
-    if not inventory:
-        print("Your inventory is empty!")
-        return
-    print("\nInventory:")
-    for idx, item in enumerate(inventory, 1):
-        print(f"{idx}. {item}")
-    choice = input("Select an item to use (or type 'cancel' to go back): ")
-    if choice.lower() == 'cancel':
-        return
-    try:
-        choice_idx = int(choice) - 1
-        if 0 <= choice_idx < len(inventory):
-            item = inventory[choice_idx]
-            print(f"You used {item}!")
-            if item in items:
-                effect = items[item]["effect"]
-                value = items[item]["value"]
-                if effect == "heal":
-                    Nyx["health"] += value
-                    print(f"Nyx healed for {value} health! Current Health: {Nyx['health']}")
-                elif effect == "restore_mp":
-                    Nyx["mp"] += value
-                    print(f"Nyx restored {value} MP! Current MP: {Nyx['mp']}")
-                elif effect == "buff":
-                    Gods[Nyx["ally_god"]]["damage"] += value
-                    print(f"Nyx's attack power increased by {value}! Current Damage: {Gods[Nyx['ally_god']]['damage']}")
-            inventory.pop(choice_idx)
-        else:
-            print("Invalid selection.")
-    except ValueError:
-        print("Invalid input. Please enter a number.")
-
-def throw_item(inventory):
-    if not inventory:
-        print("Your inventory is empty!")
-        return
-    print("You throw all items in your inventory away!")
-    inventory.clear()
-
 enemies = {
     "fire_fiend": {"health": 30, "damage": 10, "element": "fire", "weakness": "water"},
     "water_zombie": {"health": 20, "damage": 12, "element": "water", "weakness": "nature"},
@@ -144,7 +97,7 @@ enemies = {
     "mind_flayer": {"health": 40, "damage": 20, "element": "clear mind", "weakness": "rage"}
 }
 
-spawned_enemies = [] 
+spawned_enemies = [] # Corregido de "ememies"[cite: 2]
 
 def Enemy_Set_up():
     print("\n--- Select the Enemies to fight against ---")
@@ -161,21 +114,22 @@ def Enemy_Set_up():
     except ValueError:
         print("Please enter a valid number.")
 
-def combat_phase(): # Eliminamos los parámetros locales
+def combat_phase(): # Eliminación de variables locales que causaban desincronización[cite: 2]
     active_combat = True
     while active_combat:
         print("\n--- Combat Phase ---")
-        print(f"Nyx's Health: {Nyx['health']}") # Lee directamente del diccionario
+        print(f"\nNyx's Health: {Nyx['health']}") # Lectura directa del diccionario global
 
         active_enemies = [e for e in spawned_enemies if e in enemies and enemies[e]["health"] > 0]
         
         if not active_enemies:
             print("\nAll enemies have been defeated! You are victorious!")
+            active_combat = False
             break
             
         print("Enemies:")
         for enemy in active_enemies:
-            print(f"- {enemy.replace('_', ' ').capitalize()} (Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']})")
+            print(f"{enemy.capitalize()} - Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']}")
             
         action = input("\nChoose your action (attack, defend, use item, flee): ").lower()
         if action == "attack":
@@ -185,7 +139,7 @@ def combat_phase(): # Eliminamos los parámetros locales
                 base_damage = Gods[Nyx["ally_god"]]["damage"]
                 
                 if attack_type == "special":
-                    if Nyx["mp"] >= Nyx["special_cost"]: # Usa el diccionario
+                    if Nyx["mp"] >= Nyx["special_cost"]:
                         Nyx["mp"] -= Nyx["special_cost"]
                         print(f"\nNyx channels {Gods[Nyx['ally_god']]['element']} magic! (-{Nyx['special_cost']} MP)")
                         
@@ -196,45 +150,48 @@ def combat_phase(): # Eliminamos los parámetros locales
                         print("\nNot enough MP! Nyx performs a normal attack instead.")
                 
                 enemies[target]["health"] -= base_damage
-                print(f"You struck {target.replace('_', ' ').capitalize()} for {base_damage} damage!")
+                print(f"You struck {target.capitalize()} with {Gods[Nyx['ally_god']]['weapon']} for {base_damage} damage!")
+                print(f"Remaining MP: {Nyx['mp']}")
                 
                 if enemies[target]["health"] <= 0:
-                    print(f"{target.replace('_', ' ').capitalize()} has been defeated!")
+                    print(f"{target.capitalize()} has been defeated!")
             else:
                 print("Invalid target. You missed your turn!")
                 
         elif action == "defend":
             print("\nYou brace yourself for the next attack.")
         elif action == "use item":
-            use_item(Nyx["inventory"])
+            print("\nYou rummage through your inventory for an item to use.")
+            # Llamado al módulo inventario
+            inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
         elif action == "flee":
             print("\nYou have fled the battle!")
+            active_combat = False
             break
         else:
             print("Invalid action.")
             continue
 
-        # Fase de ataque enemigo
         for enemy in active_enemies:
             if enemies[enemy]["health"] > 0:
-                print(f"\n{enemy.replace('_', ' ').capitalize()} attacks Nyx!")
-                Nyx["health"] -= enemies[enemy]["damage"] # Resta directo al diccionario
+                print(f"\n{enemy.capitalize()} attacks Nyx!")
+                Nyx["health"] -= enemies[enemy]["damage"]
                 print(f"Nyx takes {enemies[enemy]['damage']} damage! Remaining Health: {Nyx['health']}")
                 if Nyx["health"] <= 0:
                     print("\nNyx has been defeated! Game Over.")
+                    active_combat = False
                     return
 
-# Bloque de ejecución principal
+# Bloque de ejecución y Menú Principal
 if __name__ == "__main__":
     print("Welcome to The Ballad of Nyx")
     select_ally()
     
-    # Pruebas iniciales para demostrar funcionalidad al profesor
-    Add_item_to_inventory(Nyx["inventory"], "herbs")
-    Add_item_to_inventory(Nyx["inventory"], "herbs")
-    Add_item_to_inventory(Nyx["inventory"], "ginsing")
-    Add_item_to_inventory(Nyx["inventory"], "ginsing")
-        
+    # Pruebas iniciales usando el nuevo archivo inventario.py
+    inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
+    inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
+    inventario.Add_item_to_inventory(Nyx["inventory"], "ginsing", Nyx["Max_capacity"])
+    inventario.Add_item_to_inventory(Nyx["inventory"], "ginsing", Nyx["Max_capacity"])
     
     while True:
         print("\n--- MAIN MENU ---")
@@ -250,11 +207,14 @@ if __name__ == "__main__":
             print(f"\nCurrent Inventory: {Nyx['inventory']}")
             sub = input("Type 'use' to use an item, 'drop' to empty inventory, or 'back': ").lower()
             if sub == "use":
-                use_item(Nyx["inventory"])
+                inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
             elif sub == "drop":
-                throw_item(Nyx["inventory"])
+                inventario.throw_item(Nyx["inventory"])
         elif op == "3":
             Enemy_Set_up()
             combat_phase()
         elif op == "4":
+            print("Exiting the game...")
             break
+        else:
+            print("Invalid option. Please enter a number from 1 to 4.")
