@@ -127,4 +127,4 @@ Función use_item(inventory, Nyx, items, Gods):
 FinFunción
 
 ```
-![Diagrama de Flujo del Inventario](diagrama_flujo.png)
+![Diagrama de Flujo del Inventario](DiagramaFlujo.drawio.png)
