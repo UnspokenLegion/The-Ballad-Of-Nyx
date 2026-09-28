@@ -1,3 +1,4 @@
+```markdown
 # Aventura Algorítmica: The Ballad of Nyx
 
 ---
@@ -19,18 +20,25 @@ En esta primera fase del proyecto, estructuramos la base de nuestro videojuego e
 ## 3. Estructura de Archivos (Guía 1)
 El proyecto cumple con la estructura modular exigida:
 
-    The_Ballad_of_Nyx/
-    ├── main.py          # Módulo principal: Menú, selección de dios, crafteo y combate.
-    ├── inventario.py    # Módulo de datos: Operaciones del inventario usando listas.
-    └── README.md        # Documentación general del proyecto.
+```text
+The_Ballad_of_Nyx/
+├── main.py          # Módulo principal: Menú, selección de dios, crafteo y combate.
+├── inventario.py    # Módulo de datos: Operaciones del inventario usando listas.
+└── README.md        # Documentación general del proyecto.
+
+```
+
+---
 
 ## 4. Mecánica del Inventario con Listas (Semana 3)
+
 La manipulación del inventario de Nyx se apoya en los métodos nativos de listas en Python:
 
-A. Agregar Objetos (Add_item_to_inventory)
-Valida que la longitud actual de la lista no alcance ni supere la capacidad máxima (max_capacity) antes de añadir un nuevo elemento al final mediante .append().
+### A. Agregar Objetos (`Add_item_to_inventory`)
 
-Python
+Valida que la longitud actual de la lista no alcance ni supere la capacidad máxima (`max_capacity`) antes de añadir un nuevo elemento al final mediante `.append()`.
+
+```python
 def Add_item_to_inventory(inventory, item, max_capacity):
     if len(inventory) >= max_capacity:
         print("Inventory is full! Cannot add more items.")
@@ -38,29 +46,44 @@ def Add_item_to_inventory(inventory, item, max_capacity):
     inventory.append(item)
     print(f"{item} has been added to your inventory.")
     return inventory
-B. Usar Objetos (use_item)
-Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos sobre la salud (health), maná (mp) o daño de la entidad correspondiente, y elimina el ítem de la lista con .pop(choice_idx).
 
-Python
+```
+
+### B. Usar Objetos (`use_item`)
+
+Muestra la lista de ítems numerada a partir de 1 usando `enumerate(inventory, 1)`. Convierte la opción del jugador a un índice (`choice_idx = int(choice) - 1`), aplica los efectos sobre la salud (`health`), maná (`mp`) o daño de la entidad correspondiente, y elimina el ítem de la lista con `.pop(choice_idx)`.
+
+```python
 # Enumeración para selección por índice
 for idx, item in enumerate(inventory, 1):
     print(f"{idx}. {item}")
 
 # Extracción y eliminación del objeto usado
 inventory.pop(choice_idx)
-C. Soltar Objetos (throw_item)
-Permite descartar la carga del jugador vaciando la lista completa con el método .clear().
 
-Python
+```
+
+### C. Soltar Objetos (`throw_item`)
+
+Permite descartar la carga del jugador vaciando la lista completa con el método `.clear()`.
+
+```python
 def throw_item(inventory):
     if not inventory:
         print("Your inventory is empty!")
         return
     print("You throw all items in your inventory away!")
     inventory.clear()
-5. Pseudocódigo y Diagrama de Flujo (Guía 2)
-Pseudocódigo de la Mecánica use_item
-Plaintext
+
+```
+
+---
+
+## 5. Pseudocódigo y Diagrama de Flujo (Guía 2)
+
+### Pseudocódigo de la Mecánica `use_item`
+
+```text
 Función use_item(inventory, Nyx, items, Gods):
     Si inventory está vacío Entonces
         Escribir "Your inventory is empty!"
@@ -103,4 +126,3 @@ Función use_item(inventory, Nyx, items, Gods):
     Capturar ErrorDeValor:
         Escribir "Invalid input. Please enter a number."
 FinFunción
-
