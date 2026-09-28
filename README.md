@@ -125,6 +125,3 @@ Función use_item(inventory, Nyx, items, Gods):
     Capturar ErrorDeValor:
         Escribir "Invalid input. Please enter a number."
 FinFunción
-Guarda esa imagen de evidencia en la carpeta y tendrás tu Checkpoint 1 completo al 100%[cite: 1, 2].
-
-```
