@@ -45,20 +45,24 @@ def deshacer_accion(inventario_nyx):
         inventario_nyx.extend(items_perdidos)
         print(f"Deshecho: Recuperaste todos los objetos que tiraste.")
 
-    # Mecánica 3: Revertir un crafteo
+# Mecánica 3: Revertir un crafteo
     elif tipo == "craftear":
         item_creado = datos["item_creado"]
         ingredientes_gastados = datos["ingredientes_gastados"]
         
-        # Le quitamos la poción creada
+        # Validación antiexploit: verificamos si el jugador aún tiene el ítem
         if item_creado in inventario_nyx:
+            # 1. Le quitamos la poción creada
             inventario_nyx.remove(item_creado)
             
-        # Le devolvemos los ingredientes exactos que usó
-        for ingrediente, cantidad in ingredientes_gastados.items():
-            for _ in range(cantidad):
-                inventario_nyx.append(ingrediente)
-                
-        print(f"Deshecho: El objeto '{item_creado}' fue desarmado. Recuperaste tus ingredientes.")
-        
+            # 2. Le devolvemos los ingredientes exactos que usó
+            for ingrediente, cantidad in ingredientes_gastados.items():
+                for _ in range(cantidad):
+                    inventario_nyx.append(ingrediente)
+                    
+            print(f"Deshecho: El objeto '{item_creado}' fue desarmado. Recuperaste tus ingredientes.")
+        else:
+            # Si ya se lo tomó o lo botó, el crafteo no se puede revertir
+            print(f"Error: Ya no tienes '{item_creado}' en tu inventario. No puedes recuperar los materiales de un objeto que ya consumiste.")
+            
     print("-----------------------------------")

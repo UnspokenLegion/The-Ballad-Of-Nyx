@@ -1,6 +1,7 @@
 import time
-import inventario # Importamos el inventario 
+import inventario 
 import historial # NUEVO: Importamos el módulo de la pila para el Checkpoint 2
+import eventos # NUEVO: Importamos la cola FIFO para los turnos
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -85,7 +86,6 @@ def crafting_system():
             Nyx["inventory"].append(choice)
             print(f"\nSuccess! You crafted a {choice.replace('_', ' ').title()}!")
             
-            # NUEVO: Enviamos la acción a la Pila (O(1))
             historial.registrar_accion("craftear", {
                 "item_creado": choice,
                 "ingredientes_gastados": recipe
@@ -105,13 +105,26 @@ spawned_enemies = []
 
 def Enemy_Set_up():
     print("\n--- Select the Enemies to fight against ---")
+    
+    # Vaciamos la lista de enemigos de cualquier combate anterior
+    spawned_enemies.clear() 
+    
     enemy_count = 0
     try:
         enemy_amount = int(input("How many enemies do you want to fight against?: "))
         while enemy_count < enemy_amount:
-            enemy = input(f"Enter the name of enemy {enemy_count + 1} (e.g., fire_fiend): ").lower().replace(' ', '_')
-            if enemy in enemies:
-                spawned_enemies.append(enemy)
+            # 1. Pedimos la raza del enemigo (la plantilla)
+            base_enemy = input(f"Enter the name of enemy {enemy_count + 1} (e.g., fire_fiend): ").lower().replace(' ', '_')
+            
+            if base_enemy in enemies:
+                # 2. Le creamos un nombre único (ej. fire_fiend_1)
+                unique_name = f"{base_enemy}_{enemy_count + 1}"
+                
+                # 3. Clonamos las estadísticas de la plantilla para que tenga vida independiente
+                enemies[unique_name] = enemies[base_enemy].copy()
+                
+                # 4. Encolamos al enemigo único, no a la plantilla base
+                spawned_enemies.append(unique_name)
                 enemy_count += 1
             else:
                 print("Invalid input. Please enter a valid enemy name.")
@@ -119,71 +132,112 @@ def Enemy_Set_up():
         print("Please enter a valid number.")
 
 def combat_phase(): 
+    active_enemies = [e for e in spawned_enemies if e in enemies and enemies[e]["health"] > 0]
+    
+    if not active_enemies:
+        print("\nAll enemies have been defeated! You are victorious!")
+        return
+
+    print("\n==============================")
+    print("      COMBAT PHASE BEGINS      ")
+    print("==============================")
+    
+    # 1. Limpiamos cualquier cola residual y encolamos a los combatientes
+    eventos.limpiar_turnos()
+    eventos.agregar_turno("nyx") # Nyx entra de primera a la fila
+    for enemy in active_enemies:
+        eventos.agregar_turno(enemy) # Los enemigos entran detrás de ella
+
     active_combat = True
     while active_combat:
-        print("\n--- Combat Phase ---")
-        print(f"\nNyx's Health: {Nyx['health']}") 
-
-        active_enemies = [e for e in spawned_enemies if e in enemies and enemies[e]["health"] > 0]
+        # 2. Desencolamos (dequeue - O(1)) para ver de quién es el turno
+        turno_actual = eventos.siguiente_turno()
         
-        if not active_enemies:
-            print("\nAll enemies have been defeated! You are victorious!")
-            active_combat = False
+        if turno_actual is None:
             break
             
-        print("Enemies:")
-        for enemy in active_enemies:
-            print(f"{enemy.capitalize()} - Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']}")
+        # ---------------- TURNO DEL JUGADOR ----------------
+        if turno_actual == "nyx":
+            print(f"\n--- NYX'S TURN ---")
+            print(f"Health: {Nyx['health']} | MP: {Nyx['mp']}") 
             
-        action = input("\nChoose your action (attack, defend, use item, flee): ").lower()
-        if action == "attack":
-            target = input("Choose an enemy to attack: ").lower().replace(' ', '_')
-            if target in active_enemies:
-                attack_type = input("Use Normal or Special attack? ").lower()
-                base_damage = Gods[Nyx["ally_god"]]["damage"]
+            # Verificamos si aún hay enemigos vivos
+            vivos = [e for e in active_enemies if enemies[e]["health"] > 0]
+            if not vivos:
+                print("\nAll enemies have been defeated! You are victorious!")
+                active_combat = False
+                break
                 
-                if attack_type == "special":
-                    if Nyx["mp"] >= Nyx["special_cost"]:
-                        Nyx["mp"] -= Nyx["special_cost"]
-                        print(f"\nNyx channels {Gods[Nyx['ally_god']]['element']} magic! (-{Nyx['special_cost']} MP)")
-                        
-                        if enemies[target]["weakness"] == Gods[Nyx["ally_god"]]["element"]:
-                            print("It's super effective!")
-                            base_damage = int(base_damage * 1.5)
-                    else:
-                        print("\nNot enough MP! Nyx performs a normal attack instead.")
+            print("\nActive Enemies:")
+            for enemy in vivos:
+                print(f"- {enemy.capitalize()} (Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']})")
                 
-                enemies[target]["health"] -= base_damage
-                print(f"You struck {target.capitalize()} with {Gods[Nyx['ally_god']]['weapon']} for {base_damage} damage!")
-                print(f"Remaining MP: {Nyx['mp']}")
-                
-                if enemies[target]["health"] <= 0:
-                    print(f"{target.capitalize()} has been defeated!")
+            action = input("\nChoose your action (attack, defend, use item, flee): ").lower()
+            if action == "attack":
+                target = input("Choose an enemy to attack: ").lower().replace(' ', '_')
+                if target in vivos:
+                    attack_type = input("Use Normal or Special attack? ").lower()
+                    base_damage = Gods[Nyx["ally_god"]]["damage"]
+                    
+                    if attack_type == "special":
+                        if Nyx["mp"] >= Nyx["special_cost"]:
+                            Nyx["mp"] -= Nyx["special_cost"]
+                            print(f"\nNyx channels {Gods[Nyx['ally_god']]['element']} magic! (-{Nyx['special_cost']} MP)")
+                            
+                            if enemies[target]["weakness"] == Gods[Nyx["ally_god"]]["element"]:
+                                print("It's super effective!")
+                                base_damage = int(base_damage * 1.5)
+                        else:
+                            print("\nNot enough MP! Nyx performs a normal attack instead.")
+                    
+                    enemies[target]["health"] -= base_damage
+                    print(f"You struck {target.capitalize()} with {Gods[Nyx['ally_god']]['weapon']} for {base_damage} damage!")
+                    
+                    if enemies[target]["health"] <= 0:
+                        print(f"{target.capitalize()} has been defeated!")
+                else:
+                    print("Invalid target. You missed your turn!")
+                    
+            elif action == "defend":
+                print("\nYou brace yourself for the next attack.")
+            elif action == "use item":
+                print("\nYou rummage through your inventory for an item to use.")
+                inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
+            elif action == "flee":
+                print("\nYou have fled the battle!")
+                active_combat = False
+                break
             else:
-                print("Invalid target. You missed your turn!")
-                
-        elif action == "defend":
-            print("\nYou brace yourself for the next attack.")
-        elif action == "use item":
-            print("\nYou rummage through your inventory for an item to use.")
-            inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
-        elif action == "flee":
-            print("\nYou have fled the battle!")
-            active_combat = False
-            break
-        else:
-            print("Invalid action.")
-            continue
+                print("Invalid action. You lost your focus and missed your turn!")
+            
+            # 3. Si Nyx sigue en combate tras su turno, la encolamos de nuevo al final (enqueue - O(1))
+            if active_combat:
+                eventos.agregar_turno("nyx")
 
-        for enemy in active_enemies:
+        # ---------------- TURNO DEL ENEMIGO ----------------
+        else: 
+            enemy = turno_actual
+            # 4. Validamos que el enemigo desencolado no haya muerto antes de su turno
             if enemies[enemy]["health"] > 0:
-                print(f"\n{enemy.capitalize()} attacks Nyx!")
+                print(f"\n--- {enemy.upper()}'S TURN ---")
+                print(f"{enemy.capitalize()} attacks Nyx!")
                 Nyx["health"] -= enemies[enemy]["damage"]
                 print(f"Nyx takes {enemies[enemy]['damage']} damage! Remaining Health: {Nyx['health']}")
+                
                 if Nyx["health"] <= 0:
                     print("\nNyx has been defeated! Game Over.")
+                    # ARREGLO: Revivimos a Nyx al máximo para que el Menú Principal no colapse al reiniciar
+                    Nyx["health"] = 100 
+                    print("Nyx wakes up back at the camp...")
                     active_combat = False
-                    return
+                    break 
+                
+                # 5. Si el enemigo ataca y sobrevive, se vuelve a encolar (enqueue - O(1))
+                eventos.agregar_turno(enemy)
+                time.sleep(1) # Pausa dramática entre turnos
+                
+    # 6. Al acabar el bucle, liberamos memoria de la cola
+    eventos.limpiar_turnos()
 
 # Bloque de ejecución y Menú Principal
 if __name__ == "__main__":
@@ -200,8 +254,8 @@ if __name__ == "__main__":
         print("1. Crafting System")
         print("2. Manage Inventory")
         print("3. Enter Combat")
-        print("4. Undo Last Action") # NUEVO
-        print("5. Exit") # Cambiado a 5
+        print("4. Undo Last Action")
+        print("5. Exit")
         
         op = input("Choose an option: ")
         if op == "1":
@@ -217,7 +271,6 @@ if __name__ == "__main__":
             Enemy_Set_up()
             combat_phase()
         elif op == "4":
-            # NUEVO: Llama a la pila para revertir la acción más reciente
             historial.deshacer_accion(Nyx["inventory"])
         elif op == "5":
             print("Exiting the game...")
