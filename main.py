@@ -1,5 +1,6 @@
 import time
 import inventario # Importamos el inventario 
+import historial # NUEVO: Importamos el módulo de la pila para el Checkpoint 2
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -56,7 +57,6 @@ def crafting_system():
         print(f"- {crafted_item.replace('_', ' ').title()} (Requires: {reqs})")
 
     print("\nYour Inventory:")
-    # Solución aplicada: Uso estricto de métodos de lista para evitar el error .items()[cite: 2]
     unique_inv_items = set(Nyx["inventory"])
     for item in unique_inv_items:
         count = Nyx["inventory"].count(item)
@@ -71,7 +71,6 @@ def crafting_system():
         can_craft = True
         recipe = recipes[choice]
 
-        # Validación con método nativo .count() de listas
         for ingredient, required_amount in recipe.items():
             if Nyx["inventory"].count(ingredient) < required_amount:
                 can_craft = False
@@ -79,13 +78,18 @@ def crafting_system():
                 break
 
         if can_craft:
-            # Eliminación e inserción usando .remove() y .append()
             for ingredient, required_amount in recipe.items():
                 for _ in range(required_amount):
                     Nyx["inventory"].remove(ingredient)
 
             Nyx["inventory"].append(choice)
             print(f"\nSuccess! You crafted a {choice.replace('_', ' ').title()}!")
+            
+            # NUEVO: Enviamos la acción a la Pila (O(1))
+            historial.registrar_accion("craftear", {
+                "item_creado": choice,
+                "ingredientes_gastados": recipe
+            })
     else:
         print("\nPlease choose a valid recipe.")
 
@@ -97,7 +101,7 @@ enemies = {
     "mind_flayer": {"health": 40, "damage": 20, "element": "clear mind", "weakness": "rage"}
 }
 
-spawned_enemies = [] # Corregido de "ememies"[cite: 2]
+spawned_enemies = [] 
 
 def Enemy_Set_up():
     print("\n--- Select the Enemies to fight against ---")
@@ -114,11 +118,11 @@ def Enemy_Set_up():
     except ValueError:
         print("Please enter a valid number.")
 
-def combat_phase(): # Eliminación de variables locales que causaban desincronización[cite: 2]
+def combat_phase(): 
     active_combat = True
     while active_combat:
         print("\n--- Combat Phase ---")
-        print(f"\nNyx's Health: {Nyx['health']}") # Lectura directa del diccionario global
+        print(f"\nNyx's Health: {Nyx['health']}") 
 
         active_enemies = [e for e in spawned_enemies if e in enemies and enemies[e]["health"] > 0]
         
@@ -162,7 +166,6 @@ def combat_phase(): # Eliminación de variables locales que causaban desincroniz
             print("\nYou brace yourself for the next attack.")
         elif action == "use item":
             print("\nYou rummage through your inventory for an item to use.")
-            # Llamado al módulo inventario
             inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
         elif action == "flee":
             print("\nYou have fled the battle!")
@@ -187,7 +190,6 @@ if __name__ == "__main__":
     print("Welcome to The Ballad of Nyx")
     select_ally()
     
-    # Pruebas iniciales usando el nuevo archivo inventario.py
     inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
     inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
     inventario.Add_item_to_inventory(Nyx["inventory"], "ginsing", Nyx["Max_capacity"])
@@ -198,7 +200,8 @@ if __name__ == "__main__":
         print("1. Crafting System")
         print("2. Manage Inventory")
         print("3. Enter Combat")
-        print("4. Exit")
+        print("4. Undo Last Action") # NUEVO
+        print("5. Exit") # Cambiado a 5
         
         op = input("Choose an option: ")
         if op == "1":
@@ -214,7 +217,10 @@ if __name__ == "__main__":
             Enemy_Set_up()
             combat_phase()
         elif op == "4":
+            # NUEVO: Llama a la pila para revertir la acción más reciente
+            historial.deshacer_accion(Nyx["inventory"])
+        elif op == "5":
             print("Exiting the game...")
             break
         else:
-            print("Invalid option. Please enter a number from 1 to 4.")
+            print("Invalid option. Please enter a number from 1 to 5.")
