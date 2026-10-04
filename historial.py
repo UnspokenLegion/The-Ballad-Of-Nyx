@@ -1,5 +1,9 @@
-# historial.py
-# Semana 5: pila para deshacer acciones (Comportamiento LIFO)
+"""
+Módulo: historial.py
+Objetivo: Implementar una estructura de datos tipo Pila (Stack) con comportamiento LIFO.
+Cumple con el requisito de la Semana 5 de la asignatura CS2001.
+Gestiona el historial de acciones y el módulo de retroceso mediante operaciones eficientes.
+"""
 
 # 1. Definimos la pila como una lista vacía
 pila_historial = []

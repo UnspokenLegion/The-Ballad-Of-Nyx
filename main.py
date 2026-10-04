@@ -1,7 +1,14 @@
+"""
+Módulo: main.py
+Objetivo: Archivo central que ensambla el juego e importa todos los submódulos.
+Contiene el estado global de Nyx, los enemigos, el sistema de crafteo y el bucle del menú principal.
+"""
+
 import time
 import inventario 
 import historial # NUEVO: Importamos el módulo de la pila para el Checkpoint 2
 import eventos # NUEVO: Importamos la cola FIFO para los turnos
+import mazmorra # NUEVO: Importamos modulo de recursividad
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -255,9 +262,11 @@ if __name__ == "__main__":
         print("2. Manage Inventory")
         print("3. Enter Combat")
         print("4. Undo Last Action")
-        print("5. Exit")
+        print("5. Explore the Dungeon") # NUEVO: Opción 5
+        print("6. Exit")                # EXIT cambia a la opción 6
         
         op = input("Choose an option: ")
+        
         if op == "1":
             crafting_system()
         elif op == "2":
@@ -272,8 +281,35 @@ if __name__ == "__main__":
             combat_phase()
         elif op == "4":
             historial.deshacer_accion(Nyx["inventory"])
+        # NUEVO BLOQUE: Integración de la generación de mazmorras
         elif op == "5":
+            print("\n--- Exploring the Dungeon ---")
+            
+            conexiones_mapa = []
+            salas_generadas = []
+            
+            # Ampliamos el combustible para la recursividad
+            nombres_disponibles = [
+                "Isolated Island", "Dead Forest", "Strange Volcano", "Forgotten Crypt", 
+                "Abyssal Lake", "Ruined Temple", "Dark Altar", "Crystal Cavern", 
+                "Lost Keep", "???", "Whispering Cave", "Blood Sanctuary",
+                "Shadow Labyrinth", "Echoing Halls", "Sunken Ruins", "Cursed Graveyard",
+                "Obsidian Spire", "Poison Swamp", "Frozen Wastes", "Phantom Chamber"
+            ]
+            
+            print("Nyx steps into the unknown...")
+            
+            # Ajustamos la profundidad máxima a 2 para un laberinto más controlable pero muy ramificado
+            mazmorra.generar_mazmorra_ramificacion_aleatoria(
+                "Ancient Cave", 0, 2, 1, 3, conexiones_mapa, salas_generadas, nombres_disponibles
+            )
+            
+            print(f"\nDungeon layout generated! Total rooms discovered: {len(salas_generadas)}")
+            print("\nKnown paths:")
+            for conexion in conexiones_mapa:
+                print(f"- {conexion[0]} ---> {conexion[1]}")
+        elif op == "6":
             print("Exiting the game...")
             break
         else:
-            print("Invalid option. Please enter a number from 1 to 5.")
+            print("Invalid option. Please enter a number from 1 to 6.")

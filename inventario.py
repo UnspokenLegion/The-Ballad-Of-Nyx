@@ -1,5 +1,9 @@
-# inventario.py
-# Semana 3: lista de objetos del jugador
+"""
+Módulo: inventario.py
+Objetivo: Gestionar la estructura lineal (lista) del inventario de Nyx.
+Cumple con el requisito base de la asignatura CS2001.
+Contiene las funciones modulares para agregar, usar y descartar objetos.
+"""
 
 import historial # NUEVO: Conectamos el inventario con la Pila de historial
 

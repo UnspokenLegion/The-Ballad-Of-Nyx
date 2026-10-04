@@ -1,5 +1,9 @@
-# eventos.py
-# Semana 6: cola de turnos y eventos (Comportamiento estricto FIFO)
+"""
+Módulo: eventos.py
+Objetivo: Implementar una estructura de datos tipo Cola (Queue) con comportamiento FIFO.
+Cumple con el requisito de la Semana 6 de la asignatura CS2001.
+Gestiona el procesamiento por turnos y los eventos pendientes durante la fase de combate.
+"""
 
 from collections import deque
 
