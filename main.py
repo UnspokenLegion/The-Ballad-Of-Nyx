@@ -5,10 +5,11 @@ Contiene el estado global de Nyx, los enemigos, el sistema de crafteo y el bucle
 """
 
 import time
+import random 
 import inventario 
-import historial # NUEVO: Importamos el módulo de la pila para el Checkpoint 2
-import eventos # NUEVO: Importamos la cola FIFO para los turnos
-import mazmorra # NUEVO: Importamos modulo de recursividad
+import historial 
+import eventos 
+import mazmorra 
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -38,16 +39,16 @@ Gods ={
 }
 
 def select_ally():
-    print("\n--- Select your God to ally you in battle ---")
+    print("\n--- [Sistema] Selecciona a tu Dios aliado para la batalla ---")
     ally_god = ""
     while ally_god not in Gods:
-        ally_god = input("Choose your God (Apolo, Ares, Athena, Poseidon, Artemis): ").title()
+        ally_god = input("Elige a tu Dios (Apolo, Ares, Athena, Poseidon, Artemis): ").title()
         if ally_god not in Gods:
-            print("Invalid choice. Please select a valid God.")
-    print(f"\nYou have chosen {ally_god.capitalize()} as your ally!")
+            print("[Sistema] Opción inválida. Por favor selecciona un Dios válido.")
+    print(f"\n[Sistema] ¡Has elegido a {ally_god.capitalize()} como tu aliado!")
     Nyx["ally_god"] = ally_god
     
-    print(f"\nAs {ally_god.capitalize()} power starts to flow through Nyx, The weapon of {ally_god.capitalize()} appears in Nyx's hand and the element of {Gods[ally_god]['element']} is unleashed within Nyx's body, granting her the power of {Gods[ally_god]['element']} and the weapon of {Gods[ally_god]['weapon']}.")
+    print(f"\n[Historia] El poder de {ally_god.capitalize()} comienza a fluir a través de Nyx. El arma de {ally_god.capitalize()} ({Gods[ally_god]['weapon']}) aparece en sus manos y el elemento {Gods[ally_god]['element']} se desata en su interior, otorgándole una nueva fuerza.")
     time.sleep(2)
 
 def crafting_system():
@@ -57,48 +58,60 @@ def crafting_system():
         "strength_elixir": {"fungi": 2},
         "rejuvenation_flask": {"herbs": 1, "ginsing": 1}
     }
-    print("\n--- Crafting System ---")
-    print("Available items to craft:")
+    # Extraemos las llaves en una lista para poder seleccionarlas por índice numérico
+    recipe_keys = list(recipes.keys())
 
-    for crafted_item, ingredients in recipes.items():
+    print("\n--- [Crafteo] Sistema de Creación ---")
+    print("Objetos disponibles para crear:")
+
+    for idx, crafted_item in enumerate(recipe_keys, 1):
+        ingredients = recipes[crafted_item]
         reqs = ", ".join([f"{count}x {ing.title()}" for ing, count in ingredients.items()])
-        print(f"- {crafted_item.replace('_', ' ').title()} (Requires: {reqs})")
+        print(f"{idx}) {crafted_item.replace('_', ' ').title()} (Requiere: {reqs})")
 
-    print("\nYour Inventory:")
+    print("\n[Inventario] Tu inventario actual:")
     unique_inv_items = set(Nyx["inventory"])
     for item in unique_inv_items:
         count = Nyx["inventory"].count(item)
         print(f"{item.title()}: {count}")
 
-    choice = input("\nEnter the name of the item you want to craft (or type 'cancel' to go back): ").lower().replace(' ', '_')
-    if choice == 'cancel':
-        print("Exiting crafting menu.")
-        return
+    opcion_crafteo = input("\nElige el número de la receta a crear (o '0' para cancelar): ")
+    
+    # Manejo de casos límite: entradas de texto, ceros o números fuera de rango
+    try:
+        idx_crafteo = int(opcion_crafteo) - 1
         
-    if choice in recipes:
-        can_craft = True
-        recipe = recipes[choice]
-
-        for ingredient, required_amount in recipe.items():
-            if Nyx["inventory"].count(ingredient) < required_amount:
-                can_craft = False
-                print(f"\nYou don't have enough {ingredient.title()}! You need {required_amount}.")
-                break
-
-        if can_craft:
-            for ingredient, required_amount in recipe.items():
-                for _ in range(required_amount):
-                    Nyx["inventory"].remove(ingredient)
-
-            Nyx["inventory"].append(choice)
-            print(f"\nSuccess! You crafted a {choice.replace('_', ' ').title()}!")
+        if idx_crafteo == -1: # El jugador escribió 0
+            print("[Crafteo] Saliendo del menú de creación.")
+            return
             
-            historial.registrar_accion("craftear", {
-                "item_creado": choice,
-                "ingredientes_gastados": recipe
-            })
-    else:
-        print("\nPlease choose a valid recipe.")
+        if 0 <= idx_crafteo < len(recipe_keys):
+            choice = recipe_keys[idx_crafteo]
+            can_craft = True
+            recipe = recipes[choice]
+
+            for ingredient, required_amount in recipe.items():
+                if Nyx["inventory"].count(ingredient) < required_amount:
+                    can_craft = False
+                    print(f"\n[Crafteo] ¡No tienes suficiente {ingredient.title()}! Necesitas {required_amount}.")
+                    break
+
+            if can_craft:
+                for ingredient, required_amount in recipe.items():
+                    for _ in range(required_amount):
+                        Nyx["inventory"].remove(ingredient)
+
+                Nyx["inventory"].append(choice)
+                print(f"\n[Crafteo] ¡Éxito! ¡Has creado un {choice.replace('_', ' ').title()}!")
+                
+                historial.registrar_accion("craftear", {
+                    "item_creado": choice,
+                    "ingredientes_gastados": recipe
+                })
+        else:
+            print("[Crafteo] Opción fuera de rango. Por favor elige un número válido.")
+    except ValueError:
+        print("[Crafteo] Entrada no válida. Debes ingresar el número de la receta.")
 
 enemies = {
     "fire_fiend": {"health": 30, "damage": 10, "element": "fire", "weakness": "water"},
@@ -111,144 +124,139 @@ enemies = {
 spawned_enemies = [] 
 
 def Enemy_Set_up():
-    print("\n--- Select the Enemies to fight against ---")
-    
-    # Vaciamos la lista de enemigos de cualquier combate anterior
+    print("\n--- [Sistema] Configuración de Enemigos ---")
     spawned_enemies.clear() 
     
-    enemy_count = 0
     try:
-        enemy_amount = int(input("How many enemies do you want to fight against?: "))
+        enemy_amount = int(input("¿Contra cuántos enemigos deseas luchar?: "))
+        
+        # Manejo de casos límite: evitar que 0 o negativos rompan la lógica
+        if enemy_amount <= 0:
+            print("[Sistema] ¡Cantidad inválida! Debes ingresar un número mayor a 0.")
+            return
+            
+        enemy_count = 0
         while enemy_count < enemy_amount:
-            # 1. Pedimos la raza del enemigo (la plantilla)
-            base_enemy = input(f"Enter the name of enemy {enemy_count + 1} (e.g., fire_fiend): ").lower().replace(' ', '_')
+            base_enemy = input(f"Ingresa el nombre del enemigo {enemy_count + 1} (ej. fire_fiend): ").lower().replace(' ', '_')
             
             if base_enemy in enemies:
-                # 2. Le creamos un nombre único (ej. fire_fiend_1)
                 unique_name = f"{base_enemy}_{enemy_count + 1}"
-                
-                # 3. Clonamos las estadísticas de la plantilla para que tenga vida independiente
                 enemies[unique_name] = enemies[base_enemy].copy()
-                
-                # 4. Encolamos al enemigo único, no a la plantilla base
                 spawned_enemies.append(unique_name)
                 enemy_count += 1
             else:
-                print("Invalid input. Please enter a valid enemy name.")
+                print("[Sistema] Entrada inválida. Nombre de enemigo no reconocido.")
     except ValueError:
-        print("Please enter a valid number.")
+        print("[Sistema] Por favor ingresa un número válido.")
 
 def combat_phase(): 
     active_enemies = [e for e in spawned_enemies if e in enemies and enemies[e]["health"] > 0]
     
+    # Si active_enemies está vacío (por ejemplo si el jugador ingresó <= 0 y el setup hizo return), cancelamos el combate
     if not active_enemies:
-        print("\nAll enemies have been defeated! You are victorious!")
         return
 
     print("\n==============================")
-    print("      COMBAT PHASE BEGINS      ")
+    print("    INICIA LA FASE DE COMBATE  ")
     print("==============================")
     
-    # 1. Limpiamos cualquier cola residual y encolamos a los combatientes
     eventos.limpiar_turnos()
-    eventos.agregar_turno("nyx") # Nyx entra de primera a la fila
+    eventos.agregar_turno("nyx")
     for enemy in active_enemies:
-        eventos.agregar_turno(enemy) # Los enemigos entran detrás de ella
+        eventos.agregar_turno(enemy)
 
     active_combat = True
     while active_combat:
-        # 2. Desencolamos (dequeue - O(1)) para ver de quién es el turno
         turno_actual = eventos.siguiente_turno()
         
         if turno_actual is None:
             break
             
-        # ---------------- TURNO DEL JUGADOR ----------------
         if turno_actual == "nyx":
-            print(f"\n--- NYX'S TURN ---")
-            print(f"Health: {Nyx['health']} | MP: {Nyx['mp']}") 
+            print(f"\n--- [Turno] EL TURNO DE NYX ---")
+            print(f"Salud: {Nyx['health']} | PM: {Nyx['mp']}") 
             
-            # Verificamos si aún hay enemigos vivos
             vivos = [e for e in active_enemies if enemies[e]["health"] > 0]
             if not vivos:
-                print("\nAll enemies have been defeated! You are victorious!")
+                print("\n[Combate] ¡Todos los enemigos han sido derrotados! ¡Eres victoriosa!")
                 active_combat = False
                 break
                 
-            print("\nActive Enemies:")
-            for enemy in vivos:
-                print(f"- {enemy.capitalize()} (Health: {enemies[enemy]['health']}, Element: {enemies[enemy]['element']})")
+            print("\n[Combate] Enemigos Activos:")
+            for idx, enemy in enumerate(vivos, 1):
+                print(f"{idx}) {enemy.capitalize()} (Salud: {enemies[enemy]['health']}, Elemento: {enemies[enemy]['element']})")
                 
-            action = input("\nChoose your action (attack, defend, use item, flee): ").lower()
-            if action == "attack":
-                target = input("Choose an enemy to attack: ").lower().replace(' ', '_')
-                if target in vivos:
-                    attack_type = input("Use Normal or Special attack? ").lower()
-                    base_damage = Gods[Nyx["ally_god"]]["damage"]
+            action = input("\nElige tu acción (atacar, defender, usar, huir): ").lower()
+            if action == "atacar":
+                opcion_objetivo = input("Elige el número del enemigo a atacar: ")
+                
+                try:
+                    idx_objetivo = int(opcion_objetivo) - 1
+                    if 0 <= idx_objetivo < len(vivos):
+                        target = vivos[idx_objetivo]
+                        
+                        attack_type = input("¿Usar ataque normal o especial? ").lower()
+                        base_damage = Gods[Nyx["ally_god"]]["damage"]
+                        
+                        if attack_type == "especial":
+                            if Nyx["mp"] >= Nyx["special_cost"]:
+                                Nyx["mp"] -= Nyx["special_cost"]
+                                print(f"\n[Combate] ¡Nyx canaliza magia de {Gods[Nyx['ally_god']]['element']}! (-{Nyx['special_cost']} PM)")
+                                
+                                if enemies[target]["weakness"] == Gods[Nyx["ally_god"]]["element"]:
+                                    print("[Combate] ¡Es súper efectivo!")
+                                    base_damage = int(base_damage * 1.5)
+                            else:
+                                print("\n[Combate] ¡No tienes suficiente PM! Nyx realiza un ataque normal en su lugar.")
+                        
+                        enemies[target]["health"] -= base_damage
+                        print(f"[Combate] ¡Golpeas a {target.capitalize()} con tu {Gods[Nyx['ally_god']]['weapon']} por {base_damage} de daño!")
+                        
+                        if enemies[target]["health"] <= 0:
+                            print(f"[Combate] ¡{target.capitalize()} ha sido derrotado!")
+                    else:
+                        print("[Combate] Objetivo fuera de rango. ¡Perdiste la concentración y tu turno!")
+                except ValueError:
+                    print("[Combate] Entrada no válida. ¡Debías ingresar un número! Perdiste tu turno.")
                     
-                    if attack_type == "special":
-                        if Nyx["mp"] >= Nyx["special_cost"]:
-                            Nyx["mp"] -= Nyx["special_cost"]
-                            print(f"\nNyx channels {Gods[Nyx['ally_god']]['element']} magic! (-{Nyx['special_cost']} MP)")
-                            
-                            if enemies[target]["weakness"] == Gods[Nyx["ally_god"]]["element"]:
-                                print("It's super effective!")
-                                base_damage = int(base_damage * 1.5)
-                        else:
-                            print("\nNot enough MP! Nyx performs a normal attack instead.")
-                    
-                    enemies[target]["health"] -= base_damage
-                    print(f"You struck {target.capitalize()} with {Gods[Nyx['ally_god']]['weapon']} for {base_damage} damage!")
-                    
-                    if enemies[target]["health"] <= 0:
-                        print(f"{target.capitalize()} has been defeated!")
-                else:
-                    print("Invalid target. You missed your turn!")
-                    
-            elif action == "defend":
-                print("\nYou brace yourself for the next attack.")
-            elif action == "use item":
-                print("\nYou rummage through your inventory for an item to use.")
+            elif action == "defender":
+                print("\n[Combate] Te preparas para resistir el siguiente ataque.")
+            elif action == "usar":
+                print("\n[Combate] Buscas en tu inventario un objeto para usar...")
                 inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
-            elif action == "flee":
-                print("\nYou have fled the battle!")
+            elif action == "huir":
+                print("\n[Combate] ¡Has huido de la batalla de forma cobarde!")
                 active_combat = False
                 break
             else:
-                print("Invalid action. You lost your focus and missed your turn!")
+                print("[Combate] Acción no reconocida. ¡Perdiste tu turno por dudar!")
             
-            # 3. Si Nyx sigue en combate tras su turno, la encolamos de nuevo al final (enqueue - O(1))
             if active_combat:
                 eventos.agregar_turno("nyx")
 
-        # ---------------- TURNO DEL ENEMIGO ----------------
         else: 
             enemy = turno_actual
-            # 4. Validamos que el enemigo desencolado no haya muerto antes de su turno
             if enemies[enemy]["health"] > 0:
-                print(f"\n--- {enemy.upper()}'S TURN ---")
-                print(f"{enemy.capitalize()} attacks Nyx!")
+                print(f"\n--- [Turno] TURNO DE {enemy.upper()} ---")
+                print(f"[Combate] ¡{enemy.capitalize()} ataca a Nyx!")
                 Nyx["health"] -= enemies[enemy]["damage"]
-                print(f"Nyx takes {enemies[enemy]['damage']} damage! Remaining Health: {Nyx['health']}")
+                print(f"[Combate] ¡Nyx recibe {enemies[enemy]['damage']} de daño! Salud restante: {Nyx['health']}")
                 
                 if Nyx["health"] <= 0:
-                    print("\nNyx has been defeated! Game Over.")
-                    # ARREGLO: Revivimos a Nyx al máximo para que el Menú Principal no colapse al reiniciar
+                    print("\n[Combate] ¡Nyx ha sido derrotada! Fin del juego.")
                     Nyx["health"] = 100 
-                    print("Nyx wakes up back at the camp...")
+                    print("[Historia] Nyx se despierta de vuelta en el campamento base...")
                     active_combat = False
                     break 
                 
-                # 5. Si el enemigo ataca y sobrevive, se vuelve a encolar (enqueue - O(1))
                 eventos.agregar_turno(enemy)
-                time.sleep(1) # Pausa dramática entre turnos
+                time.sleep(1)
                 
-    # 6. Al acabar el bucle, liberamos memoria de la cola
     eventos.limpiar_turnos()
 
 # Bloque de ejecución y Menú Principal
 if __name__ == "__main__":
-    print("Welcome to The Ballad of Nyx")
+    print("Bienvenido a La Balada de Nyx")
     select_ally()
     
     inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
@@ -257,59 +265,120 @@ if __name__ == "__main__":
     inventario.Add_item_to_inventory(Nyx["inventory"], "ginsing", Nyx["Max_capacity"])
     
     while True:
-        print("\n--- MAIN MENU ---")
-        print("1. Crafting System")
-        print("2. Manage Inventory")
-        print("3. Enter Combat")
-        print("4. Undo Last Action")
-        print("5. Explore the Dungeon") # NUEVO: Opción 5
-        print("6. Exit")                # EXIT cambia a la opción 6
+        print("\n--- [Menú] MENÚ PRINCIPAL ---")
+        print("1. Sistema de Crafteo")
+        print("2. Gestionar Inventario")
+        print("3. Entrar en Combate")
+        print("4. Deshacer Última Acción")
+        print("5. Explorar la Mazmorra")
+        print("6. Salir")
         
-        op = input("Choose an option: ")
+        op = input("Elige una opción: ")
         
         if op == "1":
             crafting_system()
         elif op == "2":
-            print(f"\nCurrent Inventory: {Nyx['inventory']}")
-            sub = input("Type 'use' to use an item, 'drop' to empty inventory, or 'back': ").lower()
-            if sub == "use":
+            print(f"\n[Inventario] Inventario Actual: {Nyx['inventory']}")
+            sub = input("Escribe 'usar' para consumir un objeto, 'tirar' para vaciarlo, o 'volver': ").lower()
+            if sub == "usar":
                 inventario.use_item(Nyx["inventory"], Nyx, items, Gods)
-            elif sub == "drop":
+            elif sub == "tirar":
                 inventario.throw_item(Nyx["inventory"])
         elif op == "3":
             Enemy_Set_up()
             combat_phase()
         elif op == "4":
             historial.deshacer_accion(Nyx["inventory"])
-        # NUEVO BLOQUE: Integración de la generación de mazmorras
-        elif op == "5":
-            print("\n--- Exploring the Dungeon ---")
             
+        elif op == "5":
+            print("\n--- [Sistema] Generando la Mazmorra ---")
             conexiones_mapa = []
             salas_generadas = []
-            
-            # Ampliamos el combustible para la recursividad
             nombres_disponibles = [
-                "Isolated Island", "Dead Forest", "Strange Volcano", "Forgotten Crypt", 
-                "Abyssal Lake", "Ruined Temple", "Dark Altar", "Crystal Cavern", 
-                "Lost Keep", "???", "Whispering Cave", "Blood Sanctuary",
-                "Shadow Labyrinth", "Echoing Halls", "Sunken Ruins", "Cursed Graveyard",
-                "Obsidian Spire", "Poison Swamp", "Frozen Wastes", "Phantom Chamber"
+                "Isla Aislada", "Bosque Muerto", "Volcán Extraño", "Cripta Olvidada", 
+                "Lago Abisal", "Templo en Ruinas", "Altar Oscuro", "Caverna de Cristal", 
+                "Torreón Perdido", "Cueva Susurrante", "Santuario de Sangre", "Laberinto de Sombras", 
+                "Salones Resonantes", "Ruinas Hundidas", "Cementerio Maldito", "Aguja de Obsidiana"
             ]
             
-            print("Nyx steps into the unknown...")
-            
-            # Ajustamos la profundidad máxima a 2 para un laberinto más controlable pero muy ramificado
+            sala_inicial = "Cueva Ancestral"
             mazmorra.generar_mazmorra_ramificacion_aleatoria(
-                "Ancient Cave", 0, 2, 1, 3, conexiones_mapa, salas_generadas, nombres_disponibles
+                sala_inicial, 0, 2, 1, 3, conexiones_mapa, salas_generadas, nombres_disponibles
             )
             
-            print(f"\nDungeon layout generated! Total rooms discovered: {len(salas_generadas)}")
-            print("\nKnown paths:")
-            for conexion in conexiones_mapa:
-                print(f"- {conexion[0]} ---> {conexion[1]}")
+            print(f"[Mapa] ¡Mazmorra generada! {len(salas_generadas)} salas esperan por ti.")
+            
+            eventos.limpiar_turnos()
+            eventos_posibles = [
+                "[Entorno] Un murciélago gigante roza tu cabeza en la oscuridad.", 
+                "[Entorno] Escuchas pasos pesados y metálicos resonando a lo lejos.", 
+                "[Entorno] Una ráfaga de viento helado casi apaga tu antorcha.", 
+                "[Entorno] Sientes una presencia ancestral observándote."
+            ]
+            for _ in range(len(salas_generadas)):
+                eventos.agregar_turno(random.choice(eventos_posibles))
+
+            sala_actual = sala_inicial
+            explorando = True
+            
+            while explorando:
+                print(f"\n[MAPA] Estás en: {sala_actual}")
+                salas_conectadas = [destino for origen, destino in conexiones_mapa if origen == sala_actual]
+                
+                if len(salas_conectadas) == 0:
+                    print("[Exploración] ¡Esta sala es un callejón sin salida! Encuentras un 'fungi' brillante en el suelo.")
+                    inventario.Add_item_to_inventory(Nyx["inventory"], "fungi", Nyx["Max_capacity"])
+                
+                print("\n1. Moverse  2. Ver historial  3. Deshacer movimiento  4. Salir de la mazmorra")
+                accion_mazmorra = input("Opción: ")
+                
+                if accion_mazmorra == "1":
+                    if not salas_conectadas:
+                        print("[Sistema] No hay salidas desde aquí. ¡Utiliza la opción de deshacer para retroceder!")
+                        continue
+                        
+                    print("[Mapa] Salas conectadas:")
+                    for idx, sala in enumerate(salas_conectadas, 1):
+                        print(f"{idx}) {sala}")
+                        
+                    opcion_sala = input("Elige el número de la sala: ")
+                    
+                    try:
+                        idx_sala = int(opcion_sala) - 1
+                        if 0 <= idx_sala < len(salas_conectadas):
+                            sala_destino = salas_conectadas[idx_sala]
+                            
+                            historial.registrar_accion("moverse", {"sala_origen": sala_actual})
+                            sala_actual = sala_destino
+                            print(f"\n[Exploración] Te adentras valientemente en: {sala_actual}")
+                            
+                            evento_actual = eventos.siguiente_turno()
+                            if evento_actual:
+                                print(f"{evento_actual}")
+                            else:
+                                print("[Entorno] Todo está extrañamente tranquilo (Cola de eventos vacía).")
+                        else:
+                            print("[Sistema] Opción fuera de rango. Intentas caminar contra una pared sólida.")
+                    except ValueError:
+                        print("[Sistema] Opción no válida. Debes ingresar el número de la sala.")
+                        
+                elif accion_mazmorra == "2":
+                    historial.mostrar_historial_completo()
+                    
+                elif accion_mazmorra == "3":
+                    sala_devuelta = historial.deshacer_accion(Nyx["inventory"])
+                    if sala_devuelta:
+                        sala_actual = sala_devuelta
+                        print("[Historia] (El evento que acababas de presenciar se desvanece en el tiempo...)")
+                        
+                elif accion_mazmorra == "4":
+                    print("[Exploración] Escapas de la mazmorra y vuelves al campamento.")
+                    explorando = False
+                else:
+                    print("[Sistema] Opción no válida. Ingresa 1, 2, 3 o 4.")
+
         elif op == "6":
-            print("Exiting the game...")
+            print("[Sistema] Saliendo del juego...")
             break
         else:
-            print("Invalid option. Please enter a number from 1 to 6.")
+            print("[Sistema] Opción inválida. Por favor ingresa un número del 1 al 6.")

@@ -8,6 +8,10 @@ import random
 
 # --- FUNCIÓN BASE ---
 def generar_salas(sala_actual, profundidad, max_profundidad, conexiones, salas, nombres_disponibles):
+    """
+    Función recursiva base. Genera la mazmorra creando exactamente 2 salas hijas por nivel.
+    Se detiene al alcanzar la profundidad máxima establecida (caso base).
+    """
     salas.append(sala_actual)
     if profundidad >= max_profundidad:
         return
@@ -20,6 +24,11 @@ def generar_salas(sala_actual, profundidad, max_profundidad, conexiones, salas, 
 
 # --- ADAPTACIÓN 1 (Basada en Ejercicio B: Marcar sin descendencia) ---
 def generar_mazmorra_marcando_callejones(sala_actual, profundidad, max_profundidad, conexiones, salas, sin_salida, nombres_disponibles):
+    """
+    Adaptación 1: Identifica las salas que no tienen descendencia.
+    Cuando la recursividad alcanza la profundidad máxima, registra la sala actual
+    en la lista 'sin_salida' antes de detenerse.
+    """
     salas.append(sala_actual)
     
     # CASO BASE: Si es la profundidad máxima, se marca como callejón sin salida
@@ -36,6 +45,11 @@ def generar_mazmorra_marcando_callejones(sala_actual, profundidad, max_profundid
 
 # --- ADAPTACIÓN 2 (Basada en Reto D: Ramificación variable) ---
 def generar_mazmorra_ramificacion_aleatoria(sala_actual, profundidad, max_profundidad, min_puertas, max_puertas, conexiones, salas, nombres_disponibles):
+    """
+    Adaptación 2: Genera un número aleatorio de caminos por habitación.
+    Utiliza random.randint() para decidir cuántas puertas tendrá la sala actual,
+    haciendo que el mapa sea asimétrico y dinámico.
+    """
     salas.append(sala_actual)
     
     # CASO BASE
