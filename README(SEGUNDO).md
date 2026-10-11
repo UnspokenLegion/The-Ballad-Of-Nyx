@@ -64,7 +64,8 @@ La manipulación del inventario de Nyx se apoya en los métodos nativos de lista
 ### A. Agregar Objetos (`Add_item_to_inventory`)
 Valida que la longitud actual de la lista no alcance ni supere la capacidad máxima (`max_capacity`) antes de añadir un nuevo elemento al final mediante `.append()`. Además, registra la acción en la pila del historial.
 
-```python
+```
+python
 def Add_item_to_inventory(inventory, item, max_capacity):
     if len(inventory) >= max_capacity:
         print("Inventory is full! Cannot add more items.")
@@ -74,21 +75,25 @@ def Add_item_to_inventory(inventory, item, max_capacity):
     
     # Registramos la acción en la Pila
     historial.registrar_accion("recoger", {"item": item})
+```
     
     return inventory
 ### B. Usar Objetos (`use_item`)
 Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos correspondientes sobre la salud, maná o poder de ataque del dios aliado, y elimina el ítem de la lista en tiempo real mediante .pop(choice_idx). `)
 
+```
 # Enumeración para selección por índice
 for idx, item in enumerate(inventory, 1):
     print(f"{idx}. {item}")
 
 # Extracción y eliminación del objeto usado
 inventory.pop(choice_idx)
+```
 
 ### C. Soltar Objetos (`throw_item`)
 Permite descartar la carga del jugador guardando una copia exacta del inventario previo en el historial y vaciando la lista completa con el método .clear(). 
 
+```
 def throw_item(inventory):
     if not inventory:
         print("Your inventory is empty!")
@@ -99,3 +104,4 @@ def throw_item(inventory):
     
     print("You throw all items in your inventory away!")
     inventory.clear()
+```
