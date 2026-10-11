@@ -107,4 +107,4 @@ def throw_item(inventory):
 ```
 ## 8. Evidencia de ejecución
 
-![Evidencia de ejecución del Checkpoint 2](C:\Users\carlo\OneDrive\Documents\KEY\Progra3\capturas.png)
+![Evidencia de ejecución del Checkpoint 2](C:\Users\carlo\OneDrive\Documents\KEY\Progra3\capturas)
