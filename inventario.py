@@ -1,5 +1,11 @@
-# inventario.py
-# Semana 3: lista de objetos del jugador
+"""
+Módulo: inventario.py
+Objetivo: Gestionar la estructura lineal (lista) del inventario de Nyx.
+Cumple con el requisito base de la asignatura CS2001.
+Contiene las funciones modulares para agregar, usar y descartar objetos.
+"""
+
+import historial # NUEVO: Conectamos el inventario con la Pila de historial
 
 def Add_item_to_inventory(inventory, item, max_capacity):
     if len(inventory) >= max_capacity:
@@ -7,6 +13,10 @@ def Add_item_to_inventory(inventory, item, max_capacity):
         return
     inventory.append(item)
     print(f"{item} has been added to your inventory.")
+    
+    # NUEVO: Registramos la acción (O(1)) en la Pila
+    historial.registrar_accion("recoger", {"item": item})
+    
     return inventory
 
 def use_item(inventory, Nyx, items, Gods):
@@ -37,6 +47,7 @@ def use_item(inventory, Nyx, items, Gods):
                     Gods[Nyx["ally_god"]]["damage"] += value
                     print(f"Nyx's attack power increased by {value}! Current Damage: {Gods[Nyx['ally_god']]['damage']}")
             inventory.pop(choice_idx)
+            # Nota: Usar un objeto no se registra en el historial por diseño.
         else:
             print("Invalid selection.")
     except ValueError:
@@ -46,5 +57,9 @@ def throw_item(inventory):
     if not inventory:
         print("Your inventory is empty!")
         return
+        
+    # NUEVO: Hacemos una copia exacta del inventario y la apilamos ANTES de borrarlo
+    historial.registrar_accion("tirar_todo", {"inventario_previo": inventory.copy()})
+    
     print("You throw all items in your inventory away!")
     inventory.clear()
