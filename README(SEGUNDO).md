@@ -105,3 +105,6 @@ def throw_item(inventory):
     print("You throw all items in your inventory away!")
     inventory.clear()
 ```
+## 8. Evidencia de ejecución
+
+![Evidencia de ejecución del Checkpoint 2](C:\Users\carlo\OneDrive\Documents\KEY\Progra3\capturas.png)
