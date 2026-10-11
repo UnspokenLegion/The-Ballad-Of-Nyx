@@ -107,3 +107,15 @@ def throw_item(inventory):
 ```
 ## 8. Evidencia de ejecución
 
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 131012.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 132336.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 132357.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 132327.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143734.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143753.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143809.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143842.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143805.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143921.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143937.png)
+![Evidencia del Checkpoint 2](capturas/Captura de pantalla 2026-10-11 143940.png)
