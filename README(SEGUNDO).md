@@ -146,28 +146,6 @@ def throw_item(inventory):
 
 *    [Carlos Mario Alas Parada / MarioAlas06]: Responsables de la documentación teórica exigida por el sílabo, incluyendo la elaboración de los diagramas de flujo, la creación de la tabla de análisis de complejidad temporal y la actualización del pseudocódigo para las mecánicas evaluadas en las Semanas 5, 6 y 7.
 
-## 8. Evidencia de ejecución
+## 8. Evidencia de ejecución...
 
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_131012.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_132336.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_132357.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_132427.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143734.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143753.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143809.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143842.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143905.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143921.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143937.png)
-
-![Evidencia del Checkpoint 2](capturas/Captura_de_pantalla_2026-10-11_143940.png)
+### Revisar el documento adjunto en el repositorio
