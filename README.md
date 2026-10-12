@@ -147,3 +147,4 @@ def throw_item(inventory):
 *    [Carlos Mario Alas Parada / MarioAlas06]: Responsables de la documentación teórica exigida por el sílabo, incluyendo la elaboración de los diagramas de flujo, la creación de la tabla de análisis de complejidad temporal y la actualización del pseudocódigo para las mecánicas evaluadas en las Semanas 5, 6 y 7.
 
 ## 8. Evidencia de ejecución
+Revisar documento adjunto en el repositorio
