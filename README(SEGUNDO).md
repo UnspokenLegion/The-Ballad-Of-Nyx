@@ -1,4 +1,3 @@
-
 # Aventura Algorítmica: The Ballad of Nyx
 
 ---
@@ -41,9 +40,33 @@ Explora las salas ramificadas de la mazmorra y utiliza el sistema de historial p
 
 ## 4. Justificación Técnica y Complejidad O(1) de las Estructuras de Datos
 
-### A. Cola de Turnos y Eventos (`eventos.py`) - Uso de `deque`
+### A. Cola de Turnos y Eventos (eventos.py) - Uso de deque
 * **Estructura elegida:** `collections.deque` (Double-Ended Queue).
-* **Justificación algorítmica:** La gestión de turnos de combate y eventos secuenciales requiere insertar nuevos elementos al final y extraer al elemento actual del inicio de manera constante. Si utilizáramos una lista tradicional de Python (`list`) para eliminar el primer elemento (`pop(0)`), el programa estaría obligado a desplazar todos los elementos restantes en la memoria uno a uno, lo que genera un costo de tiempo de O(N). Al utilizar `deque`, implementada en C a bajo nivel, logramos insertar (`append`) y extraer (`popleft`) elementos en los extremos en un tiempo estrictamente constante de O(1), evitando cuellos de botella ante flujos extensos de turnos.
+* **Justificación algorítmica:** La gestión de turnos de combate y el flujo de eventos secuenciales del mapa opera bajo la regla FIFO (First-In, First-Out), donde el primero en entrar debe ser el primero en salir. Si utilizáramos una lista tradicional de Python (list) para extraer al elemento actual del inicio mediante list.pop(0), el intérprete estaría obligado a desplazar todos los elementos restantes una posición hacia atrás en la memoria, generando una complejidad lineal ineficiente de O(n). Para solucionar esto, implementamos deque, la cual está programada a bajo nivel en C. Esta estructura nos permite insertar elementos al final con .append() y extraer el turno o evento actual desde el inicio con .popleft(), logrando un tiempo estrictamente constante de O(1) en ambas operaciones y evitando cuellos de botella durante los combates de Nyx.
+* **Fragmento de implementación**: 
+
+from collections import deque
+
+# Definimos la cola usando 'deque' para garantizar operaciones O(1) en ambos extremos
+cola_turnos = deque()
+
+def agregar_turno(entidad):
+    """
+    Operación ENQUEUE: Agrega un personaje, enemigo o evento al final de la fila (O(1)).
+    """
+    cola_turnos.append(entidad)
+    print(f"[Sistema] '{entidad}' ha entrado a la cola.")
+
+def siguiente_turno():
+    """
+    Operación DEQUEUE: Quita y devuelve la entidad/evento que está al frente de la fila (O(1)).
+    """
+    if len(cola_turnos) == 0: 
+        return None
+    
+    # Extraemos al PRIMER elemento que ingresó (Regla FIFO mediante popleft)
+    turno_actual = cola_turnos.popleft()
+    return turno_actual
 
 ### B. Historial de Acciones y Retroceso (`historial.py`) - Uso de Pila (Stack)
 * **Estructura elegida:** Lista de Python operada bajo el principio LIFO (*Last In, First Out*).
@@ -52,10 +75,20 @@ Explora las salas ramificadas de la mazmorra y utiliza el sistema de historial p
 ---
 
 ## 5. Árbol de la Mazmorra y Decisiones de Diseño (`mazmorra.py`)
-* **Estructura de Exploración:** Las salas y rutas se generan mediante algoritmos recursivos de ramificación variable y control de profundidad, modelando un **Árbol de Decisiones** donde las elecciones de la jugadora abren nuevos caminos asimétricos.
-* **Sincronización de Eventos e Historial al Deshacer:** Una decisión crítica de diseño en este checkpoint ocurre cuando el jugador activa la función de retroceso (`undo`) dentro de la mazmorra:
-  * Al deshacer un movimiento (`tipo == "moverse"`), el sistema recupera la sala anterior mediante la pila del historial.
-  * *¿Qué pasa con los eventos?* Sincronizar la posición espacial asegura que los eventos de entorno asociados queden alineados con el nodo padre inmediato del árbol de mazmorras, previniendo incongruencias lógicas como habitar salas a las que aún no se ha ingresado o mantener estados de combate ya resueltos.
+- **Estructura de Exploración:** Las salas y rutas se generan mediante algoritmos recursivos de ramificación variable y control de profundidad, modelando un **Árbol de Decisiones** donde las elecciones de la jugadora abren nuevos caminos asimétricos.
+
+### Representación del Árbol de la Mazmorra
+A continuación se ilustra un ejemplo real del árbol generado por nuestro algoritmo de divide y conquista con ramificación aleatoria (de 1 a 3 puertas) y control de profundidad máxima (Nivel 2), representado mediante texto con sangría:
+
+```text
+Ancient Cave (Raíz - Nivel 0)
+├── Isolated Island (Nivel 1)
+│   ├── Dead Forest (Nivel 2 - Callejón sin salida)
+│   ├── Strange Volcano (Nivel 2 - Callejón sin salida)
+│   └── Forgotten Crypt (Nivel 2 - Callejón sin salida)
+└── Ruined Temple (Nivel 1)
+    ├── Abyssal Lake (Nivel 2 - Callejón sin salida)
+    └── Dark Altar (Nivel 2 - Callejón sin salida)
 
 ## 6. Mecánica del Inventario con Listas (`inventario.py`)
 
@@ -79,7 +112,7 @@ def Add_item_to_inventory(inventory, item, max_capacity):
     
     return inventory
 ### B. Usar Objetos (`use_item`)
-Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos correspondientes sobre la salud, maná o poder de ataque del dios aliado, y elimina el ítem de la lista en tiempo real mediante .pop(choice_idx). `)
+Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos correspondientes sobre la salud, maná o poder de ataque del dios aliado, y elimina el ítem de la lista en tiempo real mediante .pop(choice_idx). `
 
 ```
 # Enumeración para selección por índice
@@ -105,6 +138,13 @@ def throw_item(inventory):
     print("You throw all items in your inventory away!")
     inventory.clear()
 ```
+
+## 7. Aportes individuales de los integrantes:
+*    [Esteban Ademir Cañas Rojas / ademir1234-dot]: Responsable de la integración y lógica principal del Checkpoint 2. Lideró la reestructuración del archivo main.py para unificar el inventario, el combate y la exploración en un bucle jugable, implementó la validación de casos límite (manejo de inputs y prevención de crasheos) y realizó el ajuste de la experiencia de usuario (traducción de menús e inmersión narrativa).
+
+*    [Louis Alejandro Soto / UnspokenLegion]: Responsable de la arquitectura y el control de versiones del repositorio en GitHub. Se encargó del manejo inicial del proyecto, la gestión del Pull Request de la entrega anterior, las capturas de la evidencia y la redacción del esqueleto base de la documentación técnica en este archivo README.
+
+*    [Carlos Mario Alas Parada / MarioAlas06]: Responsables de la documentación teórica exigida por el sílabo, incluyendo la elaboración de los diagramas de flujo, la creación de la tabla de análisis de complejidad temporal y la actualización del pseudocódigo para las mecánicas evaluadas en las Semanas 5, 6 y 7.
 
 ## 8. Evidencia de ejecución
 
