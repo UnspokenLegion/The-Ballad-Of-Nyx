@@ -4,6 +4,7 @@ Objetivo: Implementar una estructura de datos tipo Pila (Stack) con comportamien
 Cumple con el requisito de la Semana 5 de la asignatura CS2001.
 Gestiona el historial de acciones y el módulo de retroceso mediante operaciones eficientes.
 """
+import estado_mundo  # Importamos el módulo que gestiona el estado del mundo
 
 # 1. Definimos la pila como una lista vacía
 pila_historial = []
@@ -90,8 +91,17 @@ def deshacer_accion(inventario_nyx):
     # NUEVA Mecánica: Revertir movimiento (Backtracking requerido por Checkpoint 2)
     if tipo == "moverse":
         sala_anterior = datos["sala_origen"]
+        sala_destino = datos.get("sala_destino")
+        estado_previo = datos.get("estado_previo_destino")
+
+        # Sincronización con el diccionario de estado del mundo
+        estado_mundo.insertar_o_actualizar_estado("nyx_ubicacion", sala_anterior)
+        if sala_destino and estado_previo is not None:
+            estado_mundo.insertar_o_actualizar_estado(("sala", sala_destino), estado_previo)
+
         print(f"Deshaces el movimiento: vuelves a {sala_anterior}")
-        return sala_anterior # Retornamos la sala para que main.py actualice a Nyx
+        print(f"[Estado del Mundo] Ubicación revertida a '{sala_anterior}'.")
+        return sala_anterior
 
     # Mecánica 1: Revertir la recolección de un objeto
     elif tipo == "recoger":
