@@ -115,7 +115,7 @@ def Add_item_to_inventory(inventory, item, max_capacity):
 Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos correspondientes sobre la salud, maná o poder de ataque del dios aliado, y elimina el ítem de la lista en tiempo real mediante .pop(choice_idx). `
 
 ``` 
-## 7. Diccionario de Estado del Mundo (`estado_mundo.py`) y Complejidad O(1)
+## 6. Diccionario de Estado del Mundo (`estado_mundo.py`) y Complejidad O(1)
 
 ### ¿Por qué el diccionario es $O(1)$ en promedio frente a $O(n)$ en una lista?
 En Python, un diccionario (`dict`) está implementado internamente como una **tabla hash**. Cuando consultamos, insertamos o actualizamos una clave inmutable (como `("sala", "Bosque Muerto")` o `"nyx_ubicacion"`), Python aplica una función hash que calcula directamente la posición en memoria donde reside el valor. Esto permite acceder a los datos en tiempo constante **$O(1)$ en promedio**, sin importar cuántas salas o entidades existan en el mundo.
