@@ -10,6 +10,7 @@ import inventario
 import historial 
 import eventos 
 import mazmorra 
+import estado_mundo
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -47,7 +48,7 @@ def select_ally():
             print("[Sistema] Opción inválida. Por favor selecciona un Dios válido.")
     print(f"\n[Sistema] ¡Has elegido a {ally_god.capitalize()} como tu aliado!")
     Nyx["ally_god"] = ally_god
-    
+    estado_mundo.insertar_o_actualizar_estado("nyx_dios_aliado", ally_god)
     print(f"\n[Historia] El poder de {ally_god.capitalize()} comienza a fluir a través de Nyx. El arma de {ally_god.capitalize()} ({Gods[ally_god]['weapon']}) aparece en sus manos y el elemento {Gods[ally_god]['element']} se desata en su interior, otorgándole una nueva fuerza.")
     time.sleep(2)
 
@@ -214,6 +215,9 @@ def combat_phase():
                         
                         if enemies[target]["health"] <= 0:
                             print(f"[Combate] ¡{target.capitalize()} ha sido derrotado!")
+                            nombre_base = "_".join(target.split("_")[:-1])
+                            if estado_mundo.consultar_estado(("jefe", nombre_base)) is not None:
+                                estado_mundo.insertar_o_actualizar_estado(("jefe", nombre_base), "derrotado")
                     else:
                         print("[Combate] Objetivo fuera de rango. ¡Perdiste la concentración y tu turno!")
                 except ValueError:
@@ -305,6 +309,8 @@ if __name__ == "__main__":
             mazmorra.generar_mazmorra_ramificacion_aleatoria(
                 sala_inicial, 0, 2, 1, 3, conexiones_mapa, salas_generadas, nombres_disponibles
             )
+            estado_mundo.inicializar_mundo(salas_generadas, sala_inicial)
+            estado_mundo.insertar_o_actualizar_estado("nyx_dios_aliado", Nyx["ally_god"])
             
             print(f"[Mapa] ¡Mazmorra generada! {len(salas_generadas)} salas esperan por ti.")
             
@@ -348,8 +354,15 @@ if __name__ == "__main__":
                         if 0 <= idx_sala < len(salas_conectadas):
                             sala_destino = salas_conectadas[idx_sala]
                             
-                            historial.registrar_accion("moverse", {"sala_origen": sala_actual})
+                            estado_previo = estado_mundo.consultar_estado(("sala", sala_destino), "sin_visitar")
+                            historial.registrar_accion("moverse", {
+                                "sala_origen": sala_actual,
+                                "sala_destino": sala_destino,
+                                "estado_previo_destino": estado_previo
+                            })
                             sala_actual = sala_destino
+                            estado_mundo.insertar_o_actualizar_estado("nyx_ubicacion", sala_actual)
+                            estado_mundo.insertar_o_actualizar_estado(("sala", sala_actual), "visitada")
                             print(f"\n[Exploración] Te adentras valientemente en: {sala_actual}")
                             
                             evento_actual = eventos.siguiente_turno()
@@ -376,9 +389,14 @@ if __name__ == "__main__":
                     explorando = False
                 else:
                     print("[Sistema] Opción no válida. Ingresa 1, 2, 3 o 4.")
-
         elif op == "6":
+            estado_mundo.resumir_progreso_mundo()
+            sin_visitar = estado_mundo.filtrar_por_estado("sala", "sin_visitar")
+            jefes_vivos = estado_mundo.filtrar_por_estado("jefe", "vivo")
+            print(f"  Salas aún sin visitar : {sin_visitar if sin_visitar else 'Ninguna'}")
+            print(f"  Jefes aún con vida    : {jefes_vivos if jefes_vivos else 'Ninguno'}")
+        elif op == "7":
             print("[Sistema] Saliendo del juego...")
             break
         else:
-            print("[Sistema] Opción inválida. Por favor ingresa un número del 1 al 6.")
+            print("[Sistema] Opción inválida. Por favor ingresa un número del 1 al 7.")
