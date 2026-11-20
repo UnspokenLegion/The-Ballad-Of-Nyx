@@ -114,6 +114,53 @@ def Add_item_to_inventory(inventory, item, max_capacity):
 ### B. Usar Objetos (`use_item`)
 Muestra la lista de ítems numerada a partir de 1 usando enumerate(inventory, 1). Convierte la opción del jugador a un índice (choice_idx = int(choice) - 1), aplica los efectos correspondientes sobre la salud, maná o poder de ataque del dios aliado, y elimina el ítem de la lista en tiempo real mediante .pop(choice_idx). `
 
+``` 
+## 7. Diccionario de Estado del Mundo (`estado_mundo.py`) y Complejidad O(1)
+
+### ¿Por qué el diccionario es $O(1)$ en promedio frente a $O(n)$ en una lista?
+En Python, un diccionario (`dict`) está implementado internamente como una **tabla hash**. Cuando consultamos, insertamos o actualizamos una clave inmutable (como `("sala", "Bosque Muerto")` o `"nyx_ubicacion"`), Python aplica una función hash que calcula directamente la posición en memoria donde reside el valor. Esto permite acceder a los datos en tiempo constante **$O(1)$ en promedio**, sin importar cuántas salas o entidades existan en el mundo.
+
+En contraste, si guardáramos el estado de cada sala en una **lista**, verificar si una sala fue visitada o si un jefe fue derrotado obligaría a recorrer los elementos secuencialmente uno por uno hasta encontrarlo, lo que representa una complejidad lineal **$O(n)$** que se degrada conforme crece el mapa.
+
+### Decisión de diseño: ¿Qué ocurre con `estado_mundo` al usar *Deshacer*?
+Cuando Nyx se desplaza a una nueva sala, `historial.py` apila no solo la `sala_origen`, sino también la `sala_destino` y el estado que tenía esa sala antes de entrar (`"sin_visitar"` o `"visitada"`). Al ejecutar **Deshacer**, el sistema revierte `nyx_ubicacion` a la sala anterior y restaura la sala destino a su estado previo en `estado_mundo`. De esta forma, si Nyx entra por primera vez a una sala y deshace el movimiento, la sala vuelve a marcarse como `"sin_visitar"`, manteniendo el estado global consistente con la línea temporal del jugador.
+
+### Evidencia de ejecución (Casos límite y Estado del Mundo) Louis Soto KEY_000093
+```text
+--- [Menú] MENÚ PRINCIPAL ---
+Elige una opción: hola
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 7.
+Elige una opción: -3
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 7.
+Elige una opción: 0
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 7.
+Elige una opción: 6
+
+--- [Estado del Mundo] RESUMEN GLOBAL ---
+  Ubicación actual de Nyx : Cueva Ancestral
+  Dios aliado             : Apolo
+  Salas exploradas        : 1 / 5
+  Jefes derrotados        : 0 / 2
+-----------------------------------------
+  Salas aún sin visitar : ['Isla Aislada', 'Bosque Muerto', 'Volcán Extraño', 'Cripta Olvidada']
+  Jefes aún con vida    : ['fire_fiend', 'mind_flayer'] 
+  ### Commits sugeridos y creación del tag `checkpoint-3`[cite: 1]
+```bash
+git add estado_mundo.py
+git commit -m "Crea modulo estado_mundo.py con diccionario, .get(), insercion y eliminacion"
+
+git add estado_mundo.py
+git commit -m "Agrega funciones de resumen y filtrado del estado del mundo"
+
+git add main.py historial.py
+git commit -m "Integra estado_mundo con grafo, misiones y sistema de deshacer en main.py"
+
+git add main.py inventario.py README.md
+git commit -m "Valida casos limite en menus y completa README con complejidad O(1) y evidencias"
+
+git tag -a checkpoint-3 -m "Entrega Checkpoint 3: Estado del mundo, integracion y casos limite"
+git push origin main --tags
+
 ```
 # Enumeración para selección por índice
 for idx, item in enumerate(inventory, 1):
