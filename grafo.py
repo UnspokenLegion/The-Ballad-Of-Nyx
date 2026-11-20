@@ -72,16 +72,14 @@ class Grafo:
     def bfs_ruta_mas_corta(self, inicio, destino, bloqueados=None):
         """
         Calcula la ruta con menos saltos entre 'inicio' y 'destino' usando BFS.
-        Permite ignorar nodos en 'bloqueados' para encontrar rutas alternativas.
+        Permite ignorar nodos en 'bloqueados' (ej. desde estado_mundo.py) para
+        encontrar rutas alternativas.
         Complejidad: O(V + E), donde V son los nodos y E las aristas.
         Retorna la lista de nodos de la ruta, o None si no existe camino posible.
         """
-        if bloqueados is None:
-            bloqueados = set()
-        else:
-            bloqueados = set(bloqueados)
+        bloqueados = set(bloqueados) if bloqueados else set()
 
-        # Casos límite: nodos inexistentes o destino/inicio bloqueados
+        # Casos límite: nodos inexistentes o inicio/destino bloqueados
         if not self.existe_nodo(inicio) or not self.existe_nodo(destino):
             return None
         if inicio in bloqueados or destino in bloqueados:
@@ -116,10 +114,7 @@ class Grafo:
         Complejidad: O(V + E).
         Retorna una lista con los nodos alcanzables en orden de visita.
         """
-        if bloqueados is None:
-            bloqueados = set()
-        else:
-            bloqueados = set(bloqueados)
+        bloqueados = set(bloqueados) if bloqueados else set()
 
         # Caso límite: nodo inicial inexistente o bloqueado
         if not self.existe_nodo(inicio) or inicio in bloqueados:
@@ -150,52 +145,51 @@ class Grafo:
 def construir_mapa_nyx():
     """
     Construye el mapa principal de The Ballad of Nyx como un grafo no dirigido
-    con ciclos y caminos alternativos a partir de las salas del juego.
+    con ciclos y caminos alternativos, alineado con los nombres en español
+    de estado_mundo.py y main.py.
     """
     mapa = Grafo(dirigido=False)
 
     conexiones = [
-        ("Ancient Cave", "Isolated Island"),
-        ("Ancient Cave", "Ruined Temple"),
-        ("Isolated Island", "Dead Forest"),
-        ("Isolated Island", "Abyssal Lake"),
-        ("Dead Forest", "Strange Volcano"),
-        ("Dead Forest", "Forgotten Crypt"),
-        ("Forgotten Crypt", "Ruined Temple"),   # Ciclo / camino alternativo
-        ("Abyssal Lake", "Ruined Temple"),      # Ciclo / camino alternativo
-        ("Strange Volcano", "Dark Altar"),
-        ("Ruined Temple", "Dark Altar"),        # Ruta alternativa hacia el altar
+        ("Cueva Ancestral", "Isla Aislada"),
+        ("Cueva Ancestral", "Templo en Ruinas"),
+        ("Isla Aislada", "Bosque Muerto"),
+        ("Isla Aislada", "Lago Abisal"),
+        ("Bosque Muerto", "Volcán Extraño"),
+        ("Bosque Muerto", "Cripta Olvidada"),
+        ("Cripta Olvidada", "Templo en Ruinas"),   # Ciclo / camino alternativo
+        ("Lago Abisal", "Templo en Ruinas"),       # Ciclo / camino alternativo
+        ("Volcán Extraño", "Altar Oscuro"),
+        ("Templo en Ruinas", "Altar Oscuro"),      # Ruta alternativa hacia el altar
     ]
 
     for origen, destino in conexiones:
         mapa.agregar_arista(origen, destino)
 
     # Zona aislada (se puede conectar luego al completar una misión)
-    mapa.agregar_nodo("Hidden Sanctuary")
+    mapa.agregar_nodo("Santuario Oculto")
 
     return mapa
 
 
 if __name__ == "__main__":
-    print("=== PRUEBAS DE grafo.py (BFS, DFS y Casos Límite) ===")
+    print("=== PRUEBAS DE grafo.py (Alineado con estado_mundo.py) ===")
     mapa_nyx = construir_mapa_nyx()
 
-    print("\n1. Ruta más corta con BFS (Ancient Cave -> Dark Altar):")
-    ruta = mapa_nyx.bfs_ruta_mas_corta("Ancient Cave", "Dark Altar")
+    print("\n1. Ruta más corta con BFS (Cueva Ancestral -> Altar Oscuro):")
+    ruta = mapa_nyx.bfs_ruta_mas_corta("Cueva Ancestral", "Altar Oscuro")
     print("  Ruta:", " -> ".join(ruta) if ruta else "Sin ruta posible")
 
-    print("\n2. Ruta alternativa con BFS si 'Ruined Temple' está bloqueado:")
-    ruta_alt = mapa_nyx.bfs_ruta_mas_corta("Ancient Cave", "Dark Altar", bloqueados={"Ruined Temple"})
+    print("\n2. Ruta alternativa con BFS si 'Templo en Ruinas' está bloqueado:")
+    ruta_alt = mapa_nyx.bfs_ruta_mas_corta("Cueva Ancestral", "Altar Oscuro", bloqueados={"Templo en Ruinas"})
     print("  Ruta alternativa:", " -> ".join(ruta_alt) if ruta_alt else "Sin ruta posible")
 
-    print("\n3. Zonas alcanzables con DFS desde 'Ancient Cave':")
-    alcanzables = mapa_nyx.dfs_zonas_alcanzables("Ancient Cave")
-    print("  Alcanzables:", alcanzables)
+    print("\n3. Zonas alcanzables con DFS desde 'Cueva Ancestral':")
+    print("  Alcanzables:", mapa_nyx.dfs_zonas_alcanzables("Cueva Ancestral"))
 
-    print("\n4. Zonas aisladas detectadas con DFS desde 'Ancient Cave':")
-    aisladas = mapa_nyx.detectar_zonas_aisladas("Ancient Cave")
-    print("  Aisladas:", aisladas)
+    print("\n4. Zonas aisladas detectadas con DFS:")
+    print("  Aisladas:", mapa_nyx.detectar_zonas_aisladas("Cueva Ancestral"))
 
-    print("\n5. Casos límite (sala inexistente y ruta a zona aislada):")
-    print("  Ruta a sala inexistente:", mapa_nyx.bfs_ruta_mas_corta("Ancient Cave", "Sala Falsa"))
-    print("  Ruta a Hidden Sanctuary:", mapa_nyx.bfs_ruta_mas_corta("Ancient Cave", "Hidden Sanctuary"))
+    print("\n5. Casos límite:")
+    print("  Ruta a sala inexistente:", mapa_nyx.bfs_ruta_mas_corta("Cueva Ancestral", "Sala Falsa"))
+    print("  Ruta a Santuario Oculto:", mapa_nyx.bfs_ruta_mas_corta("Cueva Ancestral", "Santuario Oculto"))
