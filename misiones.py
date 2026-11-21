@@ -7,6 +7,7 @@ Objetivo: Árbol de misiones de Nyx (Semana 14, Checkpoint 3).
 Nota: este módulo NO usa input() ni pausas; solo lógica del árbol.
 """
 
+from collections import deque
 
 class Nodo:
     def __init__(self, id_mision, nombre, sala, recompensa_item=None, abre_santuario=False):
@@ -55,16 +56,27 @@ def preorden(nodo, nivel=0):
         preorden(hijo, nivel + 1)
 
 
+def normalizar_id(texto):
+    """Convierte lo que escribe el jugador a un ID válido: ' m4 ' -> 'M4', '4' -> 'M4'."""
+    if texto is None:
+        return ""
+    texto = str(texto).strip().upper()
+    if texto.isdigit():
+        texto = "M" + texto
+    return texto
+
+
 def buscar_mision(nodo, id_buscado):
-    """Busca una misión por ID (recursivo). Devuelve el nodo o None."""
-    if nodo is None:
+    """Busca una misión por ID (recursivo). Devuelve el nodo o None (nunca lanza error)."""
+    objetivo = normalizar_id(id_buscado)
+    if nodo is None or objetivo == "":
         return None
 
-    if nodo.id.upper() == str(id_buscado).strip().upper():
+    if nodo.id.upper() == objetivo:
         return nodo
 
     for hijo in nodo.hijos:
-        encontrado = buscar_mision(hijo, id_buscado)
+        encontrado = buscar_mision(hijo, objetivo)
         if encontrado is not None:
             return encontrado
 
@@ -132,3 +144,65 @@ def construir_arbol_misiones_nyx():
     m8.agregar_hijo(m9)
 
     return m1
+
+def recorrido_por_niveles(raiz):
+    """
+    Recorrido Por Niveles (BFS con deque).
+    Devuelve una lista de listas: niveles[0] = [M1], niveles[1] = [M2, M3], ...
+    """
+    if raiz is None:
+        return []
+
+    niveles = []
+    cola = deque([(raiz, 0)])
+
+    while cola:
+        nodo, nivel = cola.popleft()
+        if nivel == len(niveles):
+            niveles.append([])
+        niveles[nivel].append(nodo)
+
+        for hijo in nodo.hijos:
+            cola.append((hijo, nivel + 1))
+
+    return niveles
+
+
+def mostrar_por_niveles(raiz):
+    """Muestra las misiones agrupadas por etapa y dice cuál es la etapa actual."""
+    niveles = recorrido_por_niveles(raiz)
+    etapa_actual = None
+
+    print("\n--- [Misiones por Etapa] (Recorrido por Niveles) ---")
+    for numero, grupo in enumerate(niveles):
+        hechas = sum(1 for m in grupo if m.completada)
+        print(f"\nNivel {numero}  ({hechas}/{len(grupo)} completadas)")
+        for m in grupo:
+            print(f"   {m.id}: {m.nombre} {ETIQUETAS[m.estado()]} - Sala: {m.sala}")
+
+        if etapa_actual is None and hechas < len(grupo):
+            etapa_actual = numero
+
+    if etapa_actual is None:
+        print("\n¡Has completado todas las etapas de la aventura!")
+    else:
+        print(f"\n>> Etapa actual: Nivel {etapa_actual}")
+
+
+def misiones_disponibles(raiz):
+    """Lista de misiones que se pueden completar ahora (padre completado, ellas no)."""
+    return [m for grupo in recorrido_por_niveles(raiz) for m in grupo if m.estado() == "disponible"]
+
+
+if __name__ == "__main__":
+    raiz = construir_arbol_misiones_nyx()
+
+    print("=== PRUEBAS DE CASOS LÍMITE ===")
+    for prueba in ["M99", "", "   ", "hola", "-1", "0", None, "M4", "m1", "1", "M1"]:
+        print(f"\n> Intentando completar: {prueba!r}")
+        completar_mision(raiz, prueba)
+
+    print("\n=== PREORDEN ===")
+    preorden(raiz)
+
+    mostrar_por_niveles(raiz)
