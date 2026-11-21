@@ -13,14 +13,15 @@ Para desplegar y jugar *The Ballad of Nyx* desde tu terminal:
 1. Clona el repositorio asegurándote de mantener la siguiente estructura modular de archivos:
    ```text
    The_Ballad_of_Nyx/
-   ├── main.py          # Módulo principal y bucle de juego
-   ├── inventario.py    # Gestión de ítems con listas (Semana 3)
-   ├── historial.py     # Pila (Stack) para deshacer acciones (Semana 5)
-   ├── eventos.py       # Cola (Queue) de turnos y eventos (Semana 6)
-   ├── mazmorra.py      # Generación recursiva de salas (Semana 7)
-   ├── grafo.py         # Mapa del mundo como Grafo con BFS y DFS (Semanas 12-13)
-   ├── estado_mundo.py  # Diccionario de estados dinámicos del mundo (Semana 15)
-   └── README.md        # Documentación técnica
+   ├── main.py            # Módulo principal y bucle de juego
+   ├── inventario.py      # Lista (Semana 3)
+   ├── historial.py       # Pila (Semana 5)
+   ├── eventos.py         # Cola (Semana 6)
+   ├── mazmorra.py        # Recursión (Semana 7)
+   ├── grafo.py           # Grafo, BFS y DFS (Semanas 12-13)
+   ├── estado_mundo.py    # Diccionario / Tabla Hash
+   ├── misiones.py        # Árbol de misiones (Semana 14)
+   └── README.md
    ```
 
 2. Abre tu terminal en la carpeta raíz del proyecto y ejecuta:
@@ -150,7 +151,57 @@ Sea $V$ el número de nodos (salas) y $E$ el número de aristas (caminos):
 
 ---
 
-## 9. Aportes Individuales de los Integrantes
+## 9. Árbol de Misiones (`misiones.py`)
+
+### ¿Por qué un árbol?
+Las misiones de Nyx dependen unas de otras: una misión solo se puede hacer cuando su misión "padre" ya está completada. Esa relación padre-hijo es justo lo que representa un árbol. Hay 9 misiones, 4 niveles (altura 3) y una sola misión inicial (M1).
+
+### Diagrama del árbol
+```mermaid
+graph TD
+    M1["M1: Despertar en la Cueva Ancestral"] --> M2["M2: Pacto con Apolo"]
+    M1 --> M3["M3: Pacto con Poseidón"]
+    M2 --> M4["M4: Purificar el Bosque Muerto"]
+    M2 --> M5["M5: Reliquia en la Cripta Olvidada"]
+    M4 --> M7["M7: Derrotar al Fire Fiend"]
+    M3 --> M6["M6: Explorar la Isla Aislada"]
+    M3 --> M8["M8: Sumergirse en el Lago Abisal"]
+    M8 --> M9["M9: Vencer al Mind Flayer"]
+```
+
+| Nivel | Misiones |
+|-------|----------|
+| 0 | M1 |
+| 1 | M2, M3 |
+| 2 | M4, M5, M6, M8 |
+| 3 | M7, M9 |
+
+### Recorridos y para qué sirven
+| Recorrido | Para qué lo usamos en el juego | Complejidad |
+|-----------|-------------------------------|-------------|
+| **Preorden** (recursivo) | Imprime el árbol con sangría y muestra qué misiones están completadas, disponibles o bloqueadas (menú 8 → 1). | O(n) |
+| **Por Niveles** (BFS con `deque`) | Agrupa las misiones por etapa (Nivel 0 a 3), muestra el avance de cada etapa y la etapa actual del jugador (menú 8 → 2). | O(n) |
+| Buscar / completar misión | Recorre el árbol para encontrar la misión por su ID. | O(n) |
+
+`n` = número de misiones. Cada misión se visita una sola vez. El espacio extra es O(h) en Preorden (altura del árbol) y O(ancho del nivel) en Por Niveles.
+
+### Cómo se conecta con las demás estructuras
+- **Inventario (lista):** al completar una misión, Nyx recibe un ítem real con `inventario.Add_item_to_inventory`.
+- **Grafo (BFS/DFS):** al completar M4 o M8 se agrega la arista `Altar Oscuro — Santuario Oculto`. La zona aislada pasa a ser alcanzable y BFS/DFS lo reflejan al instante.
+- **Diccionario (`estado_mundo`):** el progreso se guarda con claves `("mision", "M1")` → `completada | disponible | bloqueada`, y también `ultima_mision_completada`.
+- **Progresión:** al completar una misión se desbloquean sus misiones hijas y Nyx recupera HP o PM al azar.
+
+### Casos límite que maneja el árbol
+Misión inexistente (`M99`, texto, `0`, negativos, vacío), misión bloqueada (su padre no está completo), misión ya completada, e inventario lleno cuando la misión da un ítem. En todos los casos el juego muestra un mensaje y continúa.
+
+### ¿Qué pasa con el estado del mundo al deshacer?
+- Completar una misión es un **evento de historia permanente**: no se registra en la pila de `historial.py`, así que la opción "Deshacer" no la revierte.
+- El ítem de recompensa sí entra al historial como acción `recoger`. Si se deshace, Nyx pierde ese ítem, pero la misión sigue `completada` en el árbol y en el diccionario.
+- Mover a Nyx entre salas sí se deshace, restaurando `nyx_ubicacion` y el estado de la sala en `estado_mundo`.
+- Si se genera una mazmorra nueva (opción 5), `estado_mundo` se reinicia, pero el progreso de las misiones se vuelve a copiar desde el árbol.
+
+---
+## 10. Aportes Individuales de los Integrantes
 - **Esteban Ademir Cañas Rojas (`ademir1234-dot`):**
   - *Checkpoint 2:* Integración principal en `main.py`, validación de casos límite y experiencia de usuario.
   - *Checkpoint 3:* Implementación de la clase genérica `Grafo` con lista de adyacencia en `grafo.py`, algoritmos **BFS** (ruta más corta y rutas alternativas ante salas bloqueadas) y **DFS** (zonas alcanzables y detección de zonas aisladas), integración interactiva del Mapa del Mundo en `main.py` conectado con `estado_mundo.py` e `historial.py`, y documentación técnica de grafos ($O(V + E)$ y diagrama) en `README.md`.
@@ -159,9 +210,9 @@ Sea $V$ el número de nodos (salas) y $E$ el número de aristas (caminos):
   - *Checkpoint 3:* Implementación del módulo `estado_mundo.py` (diccionario con `.get()`, inserción, eliminación y funciones de resumen/filtro), sincronización de `estado_mundo` con el sistema de deshacer en `historial.py`, validación de casos límite y documentación de complejidad $O(1)$ en `README.md`.
 - **Carlos Mario Alas Parada (`MarioAlas06`):**
   - *Checkpoint 2:* Documentación teórica, diagramas de flujo, tabla de complejidad y pseudocódigo (Semanas 5, 6 y 7).
-  - *Checkpoint 3:* *(Pendiente de integrar su aporte de `misiones.py` y documentación del árbol de misiones).*
+  - *Checkpoint 3:* Diseño e implementación del Árbol de Misiones `misiones.py` con recorridos Preorden y Por Niveles **BFS** con `deque`, validación de casos límite, y lo integré en `main.py` (opción 8) conectándolo con el inventario, el grafo (Santuario Oculto) y el diccionario de estado del mundo. Documentación de esta sección del README.
 
 ---
 
-## 10. Evidencia de Ejecución
+## 11. Evidencia de Ejecución
 Revisar capturas y evidencias adjuntas en la carpeta `Evidencia/` del repositorio.
