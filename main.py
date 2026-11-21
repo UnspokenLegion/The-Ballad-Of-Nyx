@@ -12,6 +12,7 @@ import eventos
 import mazmorra
 import estado_mundo
 import grafo
+import misiones
 
 items = {
     "herbs": {"effect": "heal", "value": 10},
@@ -373,7 +374,103 @@ def menu_mapa_mundo(mapa_mundo):
         else:
             print("[Mapa] Opción inválida. Ingresa un número del 1 al 6.")
 
+def aplicar_recuperacion_aleatoria():
+    """Recompensa de progresión: Nyx recupera HP o PM al azar."""
+    tipo = random.choice(["health", "mp"])
+    cantidad = random.randint(10, 25)
 
+    if tipo == "health":
+        Nyx["health"] += cantidad
+        print(f"[Recompensa] Nyx recupera {cantidad} de salud. Salud actual: {Nyx['health']}")
+    else:
+        Nyx["mp"] += cantidad
+        print(f"[Recompensa] Nyx recupera {cantidad} PM. PM actuales: {Nyx['mp']}")
+
+
+def sincronizar_misiones_en_estado(raiz_misiones):
+    """Copia el estado de cada misión al diccionario del mundo: ('mision', 'M1') -> 'completada'."""
+    for grupo in misiones.recorrido_por_niveles(raiz_misiones):
+        for m in grupo:
+            estado_mundo.insertar_o_actualizar_estado(("mision", m.id), m.estado())
+
+
+def desbloquear_santuario(mapa_mundo):
+    """Conecta la zona aislada 'Santuario Oculto' al grafo (el Árbol afecta al Grafo)."""
+    if "Santuario Oculto" in mapa_mundo.obtener_vecinos("Altar Oscuro"):
+        return
+
+    mapa_mundo.agregar_arista("Altar Oscuro", "Santuario Oculto")
+    estado_mundo.insertar_o_actualizar_estado(("sala", "Santuario Oculto"), "sin_visitar")
+    print("\n[Mapa] ¡Un pasadizo secreto se abre! 'Altar Oscuro' ahora conecta con 'Santuario Oculto'.")
+
+    ruta = mapa_mundo.bfs_ruta_mas_corta("Cueva Ancestral", "Santuario Oculto")
+    if ruta:
+        print(f"[BFS] Ruta más corta desde el inicio: {' -> '.join(ruta)}")
+
+
+def completar_mision_en_juego(raiz_misiones, mapa_mundo):
+    disponibles = misiones.misiones_disponibles(raiz_misiones)
+    if disponibles:
+        print("\nMisiones disponibles ahora:")
+        for m in disponibles:
+            print(f"  {m.id}: {m.nombre} (Sala: {m.sala})")
+    else:
+        print("\nNo quedan misiones disponibles.")
+
+    entrada = input("Escribe el ID de la misión a completar (ej. M1) o '0' para cancelar: ").strip()
+    if entrada in ("", "0"):
+        print("[Misiones] Cancelado.")
+        return
+
+    nodo = misiones.buscar_mision(raiz_misiones, entrada)
+    if (nodo is not None and nodo.estado() == "disponible"
+            and nodo.recompensa_item is not None
+            and len(Nyx["inventory"]) >= Nyx["Max_capacity"]):
+        print("[Misiones] Tu inventario está lleno. Libera espacio (opción 2) para poder recibir la recompensa.")
+        return
+
+    exito, nodo = misiones.completar_mision(raiz_misiones, entrada)
+    if not exito:
+        return
+
+    # 1) Estado del mundo (diccionario)
+    estado_mundo.insertar_o_actualizar_estado("ultima_mision_completada", nodo.id)
+    sincronizar_misiones_en_estado(raiz_misiones)
+
+    # 2) Recuperación aleatoria de HP o PM
+    aplicar_recuperacion_aleatoria()
+
+    # 3) Ítem real al inventario
+    if nodo.recompensa_item:
+        print(f"[Recompensa] Recibes: {nodo.recompensa_item}")
+        inventario.Add_item_to_inventory(Nyx["inventory"], nodo.recompensa_item, Nyx["Max_capacity"])
+
+    # 4) Efecto sobre el grafo (Santuario Oculto)
+    if nodo.abre_santuario:
+        desbloquear_santuario(mapa_mundo)
+
+
+def menu_arbol_misiones(raiz_misiones, mapa_mundo):
+    while True:
+        print("\n=== [ÁRBOL DE MISIONES] ===")
+        print("1. Ver árbol de misiones (Preorden)")
+        print("2. Ver misiones por etapa (Por Niveles)")
+        print("3. Completar una misión")
+        print("4. Volver al Menú Principal")
+
+        op_mis = input("Elige una opción (1-4): ").strip()
+
+        if op_mis == "1":
+            print("\n--- [Árbol de Misiones] (Preorden) ---")
+            misiones.preorden(raiz_misiones)
+        elif op_mis == "2":
+            misiones.mostrar_por_niveles(raiz_misiones)
+        elif op_mis == "3":
+            completar_mision_en_juego(raiz_misiones, mapa_mundo)
+        elif op_mis == "4":
+            break
+        else:
+            print("[Misiones] Opción inválida. Ingresa un número del 1 al 4.")
 # Bloque de ejecución y Menú Principal
 if __name__ == "__main__":
     print("Bienvenido a La Balada de Nyx")
@@ -382,6 +479,8 @@ if __name__ == "__main__":
     mapa_mundo = grafo.construir_mapa_nyx()
     estado_mundo.inicializar_mundo(mapa_mundo.obtener_nodos(), "Cueva Ancestral")
     estado_mundo.insertar_o_actualizar_estado("nyx_dios_aliado", Nyx["ally_god"])
+    raiz_misiones = misiones.construir_arbol_misiones_nyx()
+    sincronizar_misiones_en_estado(raiz_misiones)
 
     inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
     inventario.Add_item_to_inventory(Nyx["inventory"], "herbs", Nyx["Max_capacity"])
@@ -397,9 +496,10 @@ if __name__ == "__main__":
         print("5. Explorar la Mazmorra")
         print("6. Ver Estado del Mundo")
         print("7. Mapa del Mundo (Grafo, BFS y DFS)")
-        print("8. Salir")
+        print("8. Árbol de Misiones")
+        print("9. Salir")
 
-        op = input("Elige una opción: ")
+        op = input("Elige una opción: ").strip()
 
         if op == "1":
             crafting_system()
@@ -432,6 +532,7 @@ if __name__ == "__main__":
                 sala_inicial, 0, 2, 1, 3, conexiones_mapa, salas_generadas, nombres_disponibles
             )
             estado_mundo.inicializar_mundo(salas_generadas, sala_inicial)
+            sincronizar_misiones_en_estado(raiz_misiones)
             estado_mundo.insertar_o_actualizar_estado("nyx_dios_aliado", Nyx["ally_god"])
 
             print(f"[Mapa] ¡Mazmorra generada! {len(salas_generadas)} salas esperan por ti.")
@@ -520,12 +621,17 @@ if __name__ == "__main__":
             print(f"  Salas aún sin visitar : {sin_visitar if sin_visitar else 'Ninguna'}")
             print(f"  Salas bloqueadas      : {bloqueadas if bloqueadas else 'Ninguna'}")
             print(f"  Jefes aún con vida    : {jefes_vivos if jefes_vivos else 'Ninguno'}")
+            misiones_hechas = estado_mundo.filtrar_por_estado("mision", "completada")
+            print(f"  Misiones completadas  : {misiones_hechas if misiones_hechas else 'Ninguna'}")
 
         elif op == "7":
             menu_mapa_mundo(mapa_mundo)
 
         elif op == "8":
+            menu_arbol_misiones(raiz_misiones, mapa_mundo)
+
+        elif op == "9":
             print("[Sistema] Saliendo del juego...")
             break
         else:
-            print("[Sistema] Opción inválida. Por favor ingresa un número del 1 al 8.")
+            print("[Sistema] Opción inválida. Por favor ingresa un número del 1 al 9.")
