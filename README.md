@@ -3,7 +3,7 @@
 ---
 
 ## 1. Explicación Breve y Decisiones del Equipo
-En esta fase del proyecto (*Checkpoint 2* y *Checkpoint 3*, semanas 1 a 15), hemos integrado de forma modular los componentes del juego: la gestión de inventario en `inventario.py`, la pila de historial y retroceso en `historial.py`, la cola de turnos y eventos en `eventos.py`, la generación recursiva de mazmorras en `mazmorra.py`, el diccionario de estado del mundo en `estado_mundo.py` y el mapa del mundo como grafo con BFS/DFS en `grafo.py`. Siguiendo la regla de "un archivo, una responsabilidad", cada submódulo maneja su propia lógica de datos y se comunica con `main.py` para que todas las estructuras trabajen juntas durante la partida.
+En esta fase del proyecto (*Checkpoint 2* y *Checkpoint 3*, semanas 1 a 15), hemos integrado de forma modular los componentes del juego: la gestión de inventario en `inventario.py`, la pila de historial y retroceso en `historial.py`, la cola de turnos y eventos en `eventos.py`, la generación recursiva de mazmorras en `mazmorra.py`, el diccionario de estado del mundo en `estado_mundo.py`, el mapa del mundo como grafo con BFS/DFS en `grafo.py` y el árbol de misiones con recorridos en `misiones.py`. Siguiendo la regla de "un archivo, una responsabilidad", cada submódulo maneja su propia lógica de datos y se comunica con `main.py` para que todas las estructuras trabajen juntas durante la partida.
 
 ---
 
@@ -19,7 +19,7 @@ Para desplegar y jugar *The Ballad of Nyx* desde tu terminal:
    ├── eventos.py         # Cola (Semana 6)
    ├── mazmorra.py        # Recursión (Semana 7)
    ├── grafo.py           # Grafo, BFS y DFS (Semanas 12-13)
-   ├── estado_mundo.py    # Diccionario / Tabla Hash
+   ├── estado_mundo.py    # Diccionario / Tabla Hash (Semana 15)
    ├── misiones.py        # Árbol de misiones (Semana 14)
    └── README.md
    ```
@@ -29,10 +29,11 @@ Para desplegar y jugar *The Ballad of Nyx* desde tu terminal:
    python main.py
    ```
 
-3. **Mecánicas en la Consola:**
+3. **Mecánicas en la Consola (Funcionalidades actuales):**
    - Selecciona tu deidad aliada para definir las bonificaciones de elemento y daño.
    - Administra tu inventario, craftea elixires y enfréntate a enemigos en combates por turnos ordenados mediante una cola eficiente.
    - Explora la mazmorra recursiva o navega por el **Mapa del Mundo (Grafo)** calculando rutas más cortas/alternativas con **BFS** y detectando zonas alcanzables/aisladas con **DFS**.
+   - Consulta y completa misiones en el **Árbol de Misiones** (recorrido en preorden y por niveles) para recibir recompensas reales y desbloquear la zona aislada del *Santuario Oculto*.
    - Consulta el **Estado del Mundo** en tiempo real y utiliza el historial para deshacer acciones.
 
 ---
@@ -97,11 +98,11 @@ Cuando Nyx se desplaza a una nueva sala, `historial.py` apila no solo la `sala_o
 ```text
 --- [Menú] MENÚ PRINCIPAL ---
 Elige una opción: hola
-[Sistema] Opción inválida. Por favor ingresa un número del 1 al 8.
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 9.
 Elige una opción: -3
-[Sistema] Opción inválida. Por favor ingresa un número del 1 al 8.
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 9.
 Elige una opción: 0
-[Sistema] Opción inválida. Por favor ingresa un número del 1 al 8.
+[Sistema] Opción inválida. Por favor ingresa un número del 1 al 9.
 Elige una opción: 6
 
 --- [Estado del Mundo] RESUMEN GLOBAL ---
@@ -201,6 +202,7 @@ Misión inexistente (`M99`, texto, `0`, negativos, vacío), misión bloqueada (s
 - Si se genera una mazmorra nueva (opción 5), `estado_mundo` se reinicia, pero el progreso de las misiones se vuelve a copiar desde el árbol.
 
 ---
+
 ## 10. Aportes Individuales de los Integrantes
 - **Esteban Ademir Cañas Rojas (`ademir1234-dot`):**
   - *Checkpoint 2:* Integración principal en `main.py`, validación de casos límite y experiencia de usuario.
@@ -210,7 +212,7 @@ Misión inexistente (`M99`, texto, `0`, negativos, vacío), misión bloqueada (s
   - *Checkpoint 3:* Implementación del módulo `estado_mundo.py` (diccionario con `.get()`, inserción, eliminación y funciones de resumen/filtro), sincronización de `estado_mundo` con el sistema de deshacer en `historial.py`, validación de casos límite y documentación de complejidad $O(1)$ en `README.md`.
 - **Carlos Mario Alas Parada (`MarioAlas06`):**
   - *Checkpoint 2:* Documentación teórica, diagramas de flujo, tabla de complejidad y pseudocódigo (Semanas 5, 6 y 7).
-  - *Checkpoint 3:* Diseño e implementación del Árbol de Misiones `misiones.py` con recorridos Preorden y Por Niveles **BFS** con `deque`, validación de casos límite, y lo integré en `main.py` (opción 8) conectándolo con el inventario, el grafo (Santuario Oculto) y el diccionario de estado del mundo. Documentación de esta sección del README.
+  - *Checkpoint 3:* Diseño e implementación del Árbol de Misiones `misiones.py` con recorridos Preorden y Por Niveles (**BFS** con `deque`), validación de casos límite, integración en `main.py` (opción 8) conectándolo con el inventario, el grafo (Santuario Oculto) y el diccionario de estado del mundo, y documentación de la sección del árbol en `README.md`.
 
 ---
 
