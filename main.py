@@ -219,7 +219,7 @@ def combat_phase():
                         if enemies[target]["health"] <= 0:
                             print(f"[Combate] ¡{target.capitalize()} ha sido derrotado!")
                             nombre_base = "_".join(target.split("_")[:-1])
-                            if estado_mundo.consultar_estado(("jefe", nombre_base)) is not None:
+                            if estado_mundo.consultar_estado(("jefe", nombre_base), None) is not None:
                                 estado_mundo.insertar_o_actualizar_estado(("jefe", nombre_base), "derrotado")
                     else:
                         print("[Combate] Objetivo fuera de rango. ¡Perdiste la concentración y tu turno!")
@@ -260,7 +260,6 @@ def combat_phase():
                 time.sleep(1)
 
     eventos.limpiar_turnos()
-
 
 def menu_mapa_mundo(mapa_mundo):
     """
